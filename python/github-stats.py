@@ -4,14 +4,25 @@ import argparse
 import getpass
 import requests
 
+"""
+TODO:
+- Get all repos optionally
+- Pretty format JSON response
+- Save as CSV output
+
+"""
 
 def main(username, repo):
-    """ """
+    """Query the GitHub Traffic API
+
+    username: string - GitHub username
+    repo: string - GitHub user's repo name
+    """
     username = username.strip()
     repo = repo.strip()
     pw = getpass.getpass('Password:')
 
-    # GET  /repos/:owner/:repo/traffic/views
+    # GET  /repos/:owner/:repo/traffic/views from developer.github.com/v3/repos/traffic/#views
     base_traffic_url = 'https://api.github.com/repos/'
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
     auth = (username, pw)

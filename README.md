@@ -1,21 +1,26 @@
 # github-traffic-stats
 
+Get statistics on web traffic to your GitHub repositories. 
+
+
 ## Python CLI
 
 Python CLI tool to get stats on the command line.
 
 ### Dependencies
 
-- [PyGithub/PyGithub](https://github.com/PyGithub/PyGithub) 
+- Requests ([kennethreitz/requests](https://github.com/kennethreitz/requests))
+- PyGithub ([PyGithub/PyGithub](https://github.com/PyGithub/PyGithub))
 
 ### Run
 
 Run on the command line.
 
 ```
-$ python github-stats.py 'nchah' 'github-traffic-stats'
+$ python python/github-stats.py 'nchah' 'github-traffic-stats'
 Password:*
 
+...
 ```
 
 
