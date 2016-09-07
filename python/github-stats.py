@@ -67,7 +67,8 @@ def json_to_table(repo, json_response):
     date        | #     | #...
     """
     table = repo_name + '\n' +\
-            'Total Views: ' + '\t' + total_views + '\n' + 'Total Uniques: ' + '\t' + total_uniques + '\n'
+            '# Total Views:' + '\t' + total_views + '\n' + '# Total Unique:' + '\t' + total_uniques + '\n' +\
+            'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n'
     for i in dates_and_views:
         table += i + '\t' + dates_and_views[i][0] + '\t' + dates_and_views[i][1] + '\n'
 
