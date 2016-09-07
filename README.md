@@ -5,12 +5,12 @@ Get statistics on web traffic to your GitHub repositories.
 
 ## Python CLI
 
-Python CLI tool to get stats on the command line.
+Python CLI tool to get web traffic stats on the command line.
 
 ### Dependencies
 
+
 - Requests ([kennethreitz/requests](https://github.com/kennethreitz/requests))
-- PyGithub ([PyGithub/PyGithub](https://github.com/PyGithub/PyGithub))
 
 ### Run
 
@@ -27,6 +27,8 @@ Password:* (passwords are hidden)
 ...
 
 ```
+
+
 
 
 ## Documentation
