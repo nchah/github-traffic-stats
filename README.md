@@ -18,12 +18,12 @@ Run on the command line with either `python` or `python3`.
 
 ```
 $ python python/github-stats.py 'nchah' 'github-traffic-stats'
-Password:*
+Password:* (passwords are hidden)
 ...
 
 or
 $ python python/github-stats.py 'nchah' 'ALL'
-Password:*
+Password:* (passwords are hidden)
 ...
 
 ```

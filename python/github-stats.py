@@ -9,7 +9,7 @@ import requests
 """
 TODO:
 - DONE 2016-09-05: Get all repos optionally
-- Pretty format JSON response
+- DONE 2016-09-06: Pretty format JSON response
 - Save as CSV output
 
 """
@@ -101,6 +101,8 @@ def main(username, repo='ALL'):
 
         for repo in repos:
             traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
+            traffic_response = traffic_response.json()
+            print(json_to_table(repo, traffic_response))
 
     else:
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
