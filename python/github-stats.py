@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import argparse
+from collections import OrderedDict
+import datetime
 import getpass
 import requests
 
@@ -15,7 +17,6 @@ TODO:
 
 def send_request(resource, auth, repo=None, headers=None):
     """Send request to Github API
-
     resource: string - specify the API to call
     auth: tuple - username-password tuple
     repo: string - if specified, the specific repository name
@@ -36,7 +37,44 @@ def send_request(resource, auth, repo=None, headers=None):
     return response
 
 
-def json_to_table():
+def timestamp_to_utc(timestamp):
+    """Convert unix timestamp to UTC date
+    timestamp: int - the unix timestamp integer
+    """
+    timestamp = int(str(timestamp)[0:10])
+    utc_date = datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
+    return utc_date
+
+
+def json_to_table(repo, json_response):
+    """Parse traffic stats in JSON and format into a table
+    json_response: json - the json input
+    """
+    repo_name = repo
+    total_views = str(json_response['count'])
+    total_uniques = str(json_response['uniques'])
+
+    dates_and_views = OrderedDict()
+    detailed_views = json_response['views']
+    detailed_views_len = len(detailed_views)
+    for i in range(0, detailed_views_len):
+        utc_date = timestamp_to_utc(int(detailed_views[i]['timestamp']))
+        dates_and_views[utc_date] = (str(detailed_views[i]['count']), str(detailed_views[i]['uniques']))
+
+    """Table template
+    repo_name
+    2016-09-05  | count | uniques
+    date        | #     | #...
+    """
+    table = repo_name + '\n' +\
+            'Total Views: ' + '\t' + total_views + '\n' + 'Total Uniques: ' + '\t' + total_uniques + '\n'
+    for i in dates_and_views:
+        table += i + '\t' + dates_and_views[i][0] + '\t' + dates_and_views[i][1] + '\n'
+
+    return table
+
+
+def store_json():
     """ """
 
     return ''
@@ -44,7 +82,6 @@ def json_to_table():
 
 def main(username, repo='ALL'):
     """Query the GitHub Traffic API
-
     username: string - GitHub username
     repo: string - GitHub user's repo name or by default 'ALL' repos
     """
@@ -60,14 +97,17 @@ def main(username, repo='ALL'):
         repos = []
         for i in range(0, len(repos_response)):
             repos.append(repos_response[i]['name'])
-        print(repos)
 
         for repo in repos:
             traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
 
     else:
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
-        print(traffic_response.json())
+        traffic_response = traffic_response.json()
+        # parse into tabular form
+        print(json_to_table(repo, traffic_response))
+
+    return ''
 
 
 if __name__ == '__main__':

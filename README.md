@@ -14,13 +14,18 @@ Python CLI tool to get stats on the command line.
 
 ### Run
 
-Run on the command line.
+Run on the command line with either `python` or `python3`.
 
 ```
 $ python python/github-stats.py 'nchah' 'github-traffic-stats'
 Password:*
-
 ...
+
+or
+$ python python/github-stats.py 'nchah' 'ALL'
+Password:*
+...
+
 ```
 
 
