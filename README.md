@@ -9,7 +9,6 @@ Python CLI tool to get web traffic stats on the command line.
 
 ### Dependencies
 
-
 - Requests ([kennethreitz/requests](https://github.com/kennethreitz/requests))
 
 ### Run
@@ -19,10 +18,17 @@ Run on the command line with either `python` or `python3`.
 ```
 $ python python/github-stats.py 'nchah' 'github-traffic-stats'
 Password:* (passwords are hidden)
+github-traffic-stats
+Date        Views   Unique visitors
+Totals      11      1
+2016-09-01  1       1
+2016-09-05  1       1
+2016-09-06  8       1
+2016-09-07  1       1
 ...
 
 or
-$ python python/github-stats.py 'nchah' 'ALL'
+$ python python/github-stats.py 'nchah' '*ALL*'
 Password:* (passwords are hidden)
 ...
 
@@ -30,11 +36,10 @@ Password:* (passwords are hidden)
 
 
 
-
 ## Documentation
 
 A list of the references used for this project.
 
-- [GitHub API ](https://developer.github.com/v3/)
+- [GitHub API](https://developer.github.com/v3/)
 - [Preview the Repository Traffic API (August 15, 2016)](https://developer.github.com/changes/2016-08-15-traffic-api-preview/)
 

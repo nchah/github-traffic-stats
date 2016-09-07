@@ -66,9 +66,13 @@ def json_to_table(repo, json_response):
     2016-09-05  | count | uniques
     date        | #     | #...
     """
-    table = repo_name + '\n' +\
+    table_alt = repo_name + '\n' +\
             '# Total Views:' + '\t' + total_views + '\n' + '# Total Unique:' + '\t' + total_uniques + '\n' +\
             'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n'
+
+    table = repo_name + '\n' +\
+            'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n' +\
+            'Totals' + '\t\t' + total_views + '\t' + total_uniques + '\n'
     for i in dates_and_views:
         table += i + '\t' + dates_and_views[i][0] + '\t' + dates_and_views[i][1] + '\n'
 
@@ -81,7 +85,7 @@ def store_json():
     return ''
 
 
-def main(username, repo='ALL'):
+def main(username, repo='*ALL*'):
     """Query the GitHub Traffic API
     username: string - GitHub username
     repo: string - GitHub user's repo name or by default 'ALL' repos
@@ -92,7 +96,7 @@ def main(username, repo='ALL'):
     auth_pair = (username, pw)
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
-    if repo == 'ALL':
+    if repo == '*ALL*':
         repos_response = send_request('repos', auth_pair)
         repos_response = repos_response.json()
         repos = []
