@@ -99,19 +99,25 @@ def main(username, repo='*ALL*'):
     if repo == '*ALL*':
         repos_response = send_request('repos', auth_pair)
         repos_response = repos_response.json()
-        repos = []
-        for i in range(0, len(repos_response)):
-            repos.append(repos_response[i]['name'])
-
-        for repo in repos:
-            traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
-            traffic_response = traffic_response.json()
-            print(json_to_table(repo, traffic_response))
+        try:
+            if repos_response.get('message'):
+                print(repos_response['message'])
+                return 'Code done'
+        except AttributeError:
+            repos = []
+            for i in range(0, len(repos_response)):
+                repos.append(repos_response[i]['name'])
+            for repo in repos:
+                traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
+                traffic_response = traffic_response.json()
+                print(json_to_table(repo, traffic_response))
 
     else:
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
         traffic_response = traffic_response.json()
-        # parse into tabular form
+        if traffic_response.get('message'):
+            print(traffic_response['message'])
+            return 'Code done'
         print(json_to_table(repo, traffic_response))
 
     return ''
