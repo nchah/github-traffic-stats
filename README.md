@@ -5,7 +5,7 @@ Get statistics on web traffic to your GitHub repositories.
 
 ## Python CLI
 
-Python CLI tool to get web traffic stats on the command line.
+Python CLI tool to get web traffic stats on the command line using the GitHub API.
 
 ### Dependencies
 
@@ -20,12 +20,19 @@ $ python python/github-stats.py 'nchah' 'github-traffic-stats'
 Password:* (passwords are hidden)
 github-traffic-stats
 Date        Views   Unique visitors
-Totals      11      1
+Totals      146     64
 2016-09-01  1       1
 2016-09-05  1       1
 2016-09-06  8       1
-2016-09-07  1       1
+2016-09-07  5       1
+2016-09-08  85      44
+2016-09-09  22      9
+2016-09-10  6       4
+2016-09-11  6       4
+2016-09-12  11      6
+2016-09-13  1       1
 ...
+*2016-08-08 traffic spikes after post on /r/coolgithubprojects
 
 or
 $ python python/github-stats.py 'nchah' '*ALL*'
