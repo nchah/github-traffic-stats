@@ -104,7 +104,7 @@ def store_csv(repo, json_response):
         dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
 
     # Starting up the CSV, writing the headers in a first pass
-    current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d'))
+    current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
     csv_file_name = 'data/' + current_timestamp + '-traffic-stats.csv'
     # Check if existing CSV
     try:
