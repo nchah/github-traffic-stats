@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+# import csv
 from collections import OrderedDict
 import datetime
 import getpass
@@ -17,29 +18,30 @@ TODO:
 
 def send_request(resource, auth, repo=None, headers=None):
     """Send request to Github API
-    resource: string - specify the API to call
-    auth: tuple - username-password tuple
-    repo: string - if specified, the specific repository name
-    headers: dict - if specified, the request headers
+    :param resource: string - specify the API to call
+    :param auth: tuple - username-password tuple
+    :param repo: string - if specified, the specific repository name
+    :param headers: dict - if specified, the request headers
+    :return: response - GET request response
     """
     if resource == 'traffic':
         # GET /repos/:owner/:repo/traffic/views <- from developer.github.com/v3/repos/traffic/#views
         base_url = 'https://api.github.com/repos/'
         base_url = base_url + auth[0] + '/' + repo + '/traffic/views'
         response = requests.get(base_url, auth=auth, headers=headers)
-
+        return response
     elif resource == 'repos':
         # GET /user/repos <- from developer.github.com/v3/repos/#list-your-repositories
         base_url = 'https://api.github.com/users/'
         base_url = base_url + auth[0] + '/repos'
         response = requests.get(base_url, auth=auth)
-
-    return response
+        return response
 
 
 def timestamp_to_utc(timestamp):
     """Convert unix timestamp to UTC date
-    timestamp: int - the unix timestamp integer
+    :param timestamp: int - the unix timestamp integer
+    :return: utc_data - the date in YYYY-MM-DD format
     """
     timestamp = int(str(timestamp)[0:10])
     utc_date = datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
@@ -48,7 +50,9 @@ def timestamp_to_utc(timestamp):
 
 def json_to_table(repo, json_response):
     """Parse traffic stats in JSON and format into a table
-    json_response: json - the json input
+    :param repo: str - the GitHub repository name
+    :param json_response: json - the json input
+    :return: table: str - for printing on command line
     """
     repo_name = repo
     total_views = str(json_response['count'])
@@ -56,15 +60,16 @@ def json_to_table(repo, json_response):
 
     dates_and_views = OrderedDict()
     detailed_views = json_response['views']
-    detailed_views_len = len(detailed_views)
-    for i in range(0, detailed_views_len):
-        utc_date = timestamp_to_utc(int(detailed_views[i]['timestamp']))
-        dates_and_views[utc_date] = (str(detailed_views[i]['count']), str(detailed_views[i]['uniques']))
+    for row in detailed_views:
+        utc_date = timestamp_to_utc(int(row['timestamp']))
+        dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
 
     """Table template
     repo_name
-    2016-09-05  | count | uniques
-    date        | #     | #...
+    Date        Views   Unique visitors
+    Totals      #       #
+    date        #       #
+    ...         ...     ...
     """
     table_alt = repo_name + '\n' +\
             '# Total Views:' + '\t' + total_views + '\n' + '# Total Unique:' + '\t' + total_uniques + '\n' +\
@@ -79,16 +84,24 @@ def json_to_table(repo, json_response):
     return table
 
 
-def store_json():
-    """ """
+def store_csv(repo, json_response):
+    """Store the traffic stats as CSV
+    :param repo: str - the GitHub repository name
+    :param json_response: json - the json input
+    :return:
+    """
+    repo_name = repo
+    dates_and_views = OrderedDict()
+    detailed_views = json_response['views']
 
     return ''
 
 
 def main(username, repo='*ALL*'):
     """Query the GitHub Traffic API
-    username: string - GitHub username
-    repo: string - GitHub user's repo name or by default 'ALL' repos
+    :param username: string - GitHub username
+    :param repo: string - GitHub user's repo name or by default 'ALL' repos
+    :return:
     """
     username = username.strip()
     repo = repo.strip()
