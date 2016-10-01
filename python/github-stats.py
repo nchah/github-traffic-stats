@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-# import csv
+import csv
 from collections import OrderedDict
 import datetime
 import getpass
@@ -85,14 +85,47 @@ def json_to_table(repo, json_response):
 
 
 def store_csv(repo, json_response):
-    """Store the traffic stats as CSV
+    """Store the traffic stats as a CSV, with schema:
+    repo_name, date, views, unique_visitors
+
     :param repo: str - the GitHub repository name
     :param json_response: json - the json input
     :return:
     """
     repo_name = repo
+    # # Not writing Totals stats into the CSV to maintain normalization
+    # total_views = str(json_response['count'])
+    # total_uniques = str(json_response['uniques'])
+
     dates_and_views = OrderedDict()
     detailed_views = json_response['views']
+    for row in detailed_views:
+        utc_date = timestamp_to_utc(int(row['timestamp']))
+        dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
+
+    # Starting up the CSV, writing the headers in a first pass
+    current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d'))
+    csv_file_name = 'data/' + current_timestamp + '-traffic-stats.csv'
+    # Check if existing CSV
+    try:
+        csv_file = open(csv_file_name).readlines()
+        if csv_file:
+            for i in dates_and_views:
+                row = [repo_name, i, dates_and_views[i][0], dates_and_views[i][1]]
+                with open(csv_file_name, 'a') as csvfile:
+                    csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    csv_writer.writerow(row)
+    except IOError:
+        headers = ['repository_name', 'date', 'views', 'unique_visitors']
+        with open(csv_file_name, 'a') as csvfile:
+            csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(headers)
+
+        for i in dates_and_views:
+            row = [repo_name, i, dates_and_views[i][0], dates_and_views[i][1]]
+            with open(csv_file_name, 'a') as csvfile:
+                csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                csv_writer.writerow(row)
 
     return ''
 
@@ -124,6 +157,7 @@ def main(username, repo='*ALL*'):
                 traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
                 traffic_response = traffic_response.json()
                 print(json_to_table(repo, traffic_response))
+                store_csv(repo, traffic_response)
 
     else:
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
@@ -132,6 +166,7 @@ def main(username, repo='*ALL*'):
             print(traffic_response['message'])
             return 'Code done'
         print(json_to_table(repo, traffic_response))
+        store_csv(repo, traffic_response)
 
     return ''
 
