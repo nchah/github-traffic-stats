@@ -1,7 +1,8 @@
 # github-traffic-stats
 
-Get statistics on web traffic to your GitHub repositories. 
+Get statistics on web traffic to your GitHub repositories.
 
+This can be useful for monitoring the level of attention your GitHub repositories are receiving 
 
 ## Python CLI
 
@@ -10,6 +11,8 @@ Python CLI tool to get web traffic stats on the command line using the GitHub AP
 ### Dependencies
 
 - Requests ([kennethreitz/requests](https://github.com/kennethreitz/requests))
+
+There are a number of GitHub [libraries](https://developer.github.com/libraries/) for Python and other languages, although they may not support the Repository Traffic API (announced on August 15, 2016).
 
 ### Run
 
