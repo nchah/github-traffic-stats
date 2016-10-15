@@ -11,7 +11,7 @@ import requests
 TODO:
 - DONE 2016-09-05: Get all repos optionally
 - DONE 2016-09-06: Pretty format JSON response
-- Save as CSV output
+- DONE 2016-09-30: Save as CSV output
 
 """
 # Globals
@@ -131,10 +131,11 @@ def store_csv(repo, json_response):
     return ''
 
 
-def main(username, repo='*ALL*'):
+def main(username, repo='*ALL*', save_csv='save_csv'):
     """Query the GitHub Traffic API
     :param username: string - GitHub username
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
+    :param save_csv: string - Specify if CSV log should be saved
     :return:
     """
     username = username.strip()
@@ -158,8 +159,8 @@ def main(username, repo='*ALL*'):
                 traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
                 traffic_response = traffic_response.json()
                 print(json_to_table(repo, traffic_response))
-                store_csv(repo, traffic_response)
-
+                if save_csv == 'save_csv':
+                    store_csv(repo, traffic_response)
     else:
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
         traffic_response = traffic_response.json()
@@ -167,15 +168,17 @@ def main(username, repo='*ALL*'):
             print(traffic_response['message'])
             return 'Code done'
         print(json_to_table(repo, traffic_response))
-        store_csv(repo, traffic_response)
+        if save_csv == 'save_csv':
+            store_csv(repo, traffic_response)
 
     return ''
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('user', help='Github username')
+    parser.add_argument('username', help='Github username')
     parser.add_argument('repo', help='User\'s repo')
+    parser.add_argument('save_csv', help='Set to "no_csv" if no CSV should be saved')
     args = parser.parse_args()
-    main(args.user, args.repo)
+    main(args.username, args.repo, args.save_csv)
 
