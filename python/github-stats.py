@@ -81,8 +81,8 @@ def json_to_table(repo, json_response):
     table = repo_name + '\n' +\
             'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n' +\
             'Totals' + '\t\t' + total_views + '\t' + total_uniques + '\n'
-    for i in dates_and_views:
-        table += i + '\t' + dates_and_views[i][0] + '\t' + dates_and_views[i][1] + '\n'
+    for row in dates_and_views:
+        table += row + '\t' + dates_and_views[row][0] + '\t' + dates_and_views[row][1] + '\n'
 
     return table
 
@@ -153,8 +153,8 @@ def main(username, repo='*ALL*', save_csv='save_csv'):
                 return 'Code done'
         except AttributeError:
             repos = []
-            for i in range(0, len(repos_response)):
-                repos.append(repos_response[i]['name'])
+            for repo in repos_response:
+                repos.append(repo['name'])
             for repo in repos:
                 traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
                 traffic_response = traffic_response.json()
