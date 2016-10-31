@@ -106,7 +106,8 @@ def store_csv(repo, json_response):
     dates_and_views = OrderedDict()
     detailed_views = json_response['views']
     for row in detailed_views:
-        utc_date = timestamp_to_utc(int(row['timestamp']))
+        # utc_date = timestamp_to_utc(int(row['timestamp']))
+        utc_date = str(row['timestamp'][0:10])
         dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
 
     # Starting up the CSV, writing the headers in a first pass
