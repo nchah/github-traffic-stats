@@ -46,8 +46,10 @@ def timestamp_to_utc(timestamp):
     :param timestamp: int - the unix timestamp integer
     :return: utc_data - the date in YYYY-MM-DD format
     """
+    # deprecated pre-10/31/2016
     timestamp = int(str(timestamp)[0:10])
     utc_date = datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
+    # utc_date = timestamp[0:10]
     return utc_date
 
 
@@ -64,7 +66,8 @@ def json_to_table(repo, json_response):
     dates_and_views = OrderedDict()
     detailed_views = json_response['views']
     for row in detailed_views:
-        utc_date = timestamp_to_utc(int(row['timestamp']))
+        # utc_date = timestamp_to_utc(int(row['timestamp']))
+        utc_date = str(row['timestamp'][0:10])
         dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
 
     """Table template

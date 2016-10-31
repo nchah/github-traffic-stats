@@ -19,7 +19,7 @@ There are a number of GitHub [libraries](https://developer.github.com/libraries/
 Run on the command line with either `python` or `python3`.
 
 ```
-$ python python/github-stats.py 'nchah' 'github-traffic-stats'
+$ python python/github-stats.py 'nchah' 'github-traffic-stats' 'save_csv'
 Password:* (passwords are hidden)
 github-traffic-stats
 Date        Views   Unique visitors
@@ -38,7 +38,7 @@ Totals      146     64
 *2016-08-08 traffic spikes after post on /r/coolgithubprojects
 
 or
-$ python python/github-stats.py 'nchah' '*ALL*'
+$ python python/github-stats.py 'nchah' '*ALL*' 'save_csv's
 Password:* (passwords are hidden)
 ...
 
