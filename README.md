@@ -2,11 +2,14 @@
 
 Get statistics on web traffic to your GitHub repositories.
 
-This can be useful for monitoring the level of attention your GitHub repositories are receiving 
-
 ## Python CLI
 
 Python CLI tool to get web traffic stats on the command line using the GitHub API.
+
+A few use cases to show why this may be useful.
+
+- Checking the volume of traffic to all of your repos. Monitor sudden spikes in interest or any general patterns.
+- Storing the traffic stats for future reference.
 
 ### Dependencies
 
@@ -37,14 +40,17 @@ Totals      146     64
 ...
 *2016-08-08 traffic spikes after post on /r/coolgithubprojects
 
-or
-$ python python/github-stats.py 'nchah' '*ALL*' 'save_csv's
+# Or to get stats on all of your repositories
+$ python python/github-stats.py 'nchah' '*ALL*' 'save_csv'
 Password:* (passwords are hidden)
 ...
 
 ```
 
-
+Traffic data stored in CSV files with columns:
+```
+repository_name, date, views, unique_visitors
+```
 
 ## Documentation
 
