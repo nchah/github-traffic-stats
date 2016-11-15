@@ -135,7 +135,7 @@ def store_csv(repo, json_response):
     return ''
 
 
-def main(username, repo='*ALL*', save_csv='save_csv'):
+def main(username, repo='ALL', save_csv='save_csv'):
     """Query the GitHub Traffic API
     :param username: string - GitHub username
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
@@ -148,7 +148,7 @@ def main(username, repo='*ALL*', save_csv='save_csv'):
     auth_pair = (username, pw)
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
-    if repo == '*ALL*':
+    if repo == 'ALL':
         repos_response = send_request('repos', auth_pair)
         repos_response = repos_response.json()
         try:
