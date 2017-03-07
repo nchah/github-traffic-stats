@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import csv
+import csv, os
 from collections import OrderedDict
 import datetime
 import getpass
@@ -12,11 +12,14 @@ TODO:
 - DONE 2016-09-05: Get all repos optionally
 - DONE 2016-09-06: Pretty format JSON response
 - DONE 2016-09-30: Save as CSV output
+- DONE 2017-02-24: Fixed path to savefiles
 
 """
 # Globals
 current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
-csv_file_name = 'data/' + current_timestamp + '-traffic-stats.csv'
+path=os.path.dirname(os.path.abspath(__file__))
+top_dir=os.path.split(path)[0]
+csv_file_name = top_dir+'/data/' + current_timestamp + '-traffic-stats.csv'
 
 
 def send_request(resource, auth, repo=None, headers=None):
@@ -185,4 +188,3 @@ if __name__ == '__main__':
     parser.add_argument('save_csv', help='Set to "no_csv" if no CSV should be saved')
     args = parser.parse_args()
     main(args.username, args.repo, args.save_csv)
-
