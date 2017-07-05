@@ -11,7 +11,7 @@ done
 # Get the unique rows by column 1, 2
 awk -F"," '!seen[$1, $2]++' merged.csv > merged2.csv
 
-# Sort the final rows in alpha order
+# Sort the final rows in alpha order - first by the first col., then by second col.
 sort -k1,1 -k2,2 merged2.csv > merged3.csv
 
 # Rename and cleanup, commented out just in case
