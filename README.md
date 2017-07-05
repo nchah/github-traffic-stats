@@ -52,6 +52,14 @@ Traffic data stored in CSV files with columns:
 repository_name, date, views, unique_visitors
 ```
 
+Separate CSVs are created for each run of the script.
+To merge and only preserve the unique data points, run:
+
+```
+$ bash bash/merge-csv.sh [folder_with_CSVs]
+```
+
+
 ## Documentation
 
 A list of the references used for this project.
