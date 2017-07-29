@@ -10,6 +10,8 @@ A few use cases to show why this may be useful.
 
 - Checking the volume of traffic to all of your repos. Monitor sudden spikes in interest or any general patterns.
 - Storing the traffic stats for future reference.
+- Checking how often your code is cloned.
+
 
 ### Dependencies
 
@@ -25,22 +27,31 @@ Run on the command line with either `python` or `python3`.
 $ python github-traffic-stats.py 'nchah' 'github-traffic-stats' 'save_csv'
 Password:* (passwords are hidden)
 github-traffic-stats
-Date        Views   Unique visitors
-Totals      146     64
-2016-09-01  1       1
-2016-09-05  1       1
-2016-09-06  8       1
-2016-09-07  5       1
-2016-09-08  85      44
-2016-09-09  22      9
-2016-09-10  6       4
-2016-09-11  6       4
-2016-09-12  11      6
-2016-09-13  1       1
-...
-*2016-08-08 traffic spikes after post on /r/coolgithubprojects
+Date        Views   Uniaue visitors
+Totals      98  33
+2017-07-16  1   1
+2017-07-17  10  2
+2017-07-19  11  4
+2017-07-20  12  5
+2017-07-21  3   3
+2017-07-22  1   1
+2017-07-23  1   1
+2017-07-24  17  6
+2017-07-25  32  5
+2017-07-26  1   1
+2017-07-27  1   1
+2017-07-28  6   4
+2017-07-29  2   2
 
-# Or to get stats on all of your repositories
+github-traffic-stats
+Date        Clones  Unique cloners
+Totals      4   4
+2017-07-17  1   1
+2017-07-24  2   2
+2017-07-26  1   1
+
+
+$ # Or to get stats on all of your repositories
 $ python github-traffic-stats.py 'nchah' 'ALL' 'save_csv'
 Password:* (passwords are hidden)
 ...
