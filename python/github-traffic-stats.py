@@ -14,6 +14,7 @@ current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  #
 path = os.path.dirname(os.path.abspath(__file__))
 top_dir = os.path.split(path)[0]
 csv_file_name = top_dir+'/data/' + current_timestamp + '-traffic-stats.csv'
+csv_file_name_clones = top_dir+'/data/' + current_timestamp + '-clone-stats.csv'
 
 
 def send_request(resource, auth, repo=None, headers=None):
@@ -82,21 +83,64 @@ def json_to_table(repo, json_response, response_type):
     date        #       #
     ...         ...     ...
     """
+    # Set the table
     table = repo_name + '\n' +\
             'Date' + '\t\t' + label1 + '\t' + label2 + '\n' +\
             'Totals' + '\t\t' + total_label1 + '\t' + total_uniques + '\n'
+    # Add rows to the table
     for row in dates_and_label1:
         table += row + '\t' + dates_and_label1[row][0] + '\t' + dates_and_label1[row][1] + '\n'
 
     return table
 
 
-def store_csv(repo, json_response):
+def json_to_table_referrers(repo, json_response):
+    """ Parse traffic stats in JSON and format into a table
+    :param repo: str - the GitHub repository name
+    :param json_response: json - the json input
+    :return: table: str - for printing on command line
+    """
+    repo_name = repo
+    total_count = 0
+    total_uniques = 0
+
+    # If there is granular date-level data
+    refs = OrderedDict()
+    for row in json_response:
+        referrer = row['referrer']
+        refs[referrer] = (str(row['count']), str(row['uniques']))
+        total_count += row['count']
+        total_uniques += row['uniques']
+    """ Table template
+    repo_name
+    Date        Count   Uniques
+    Totals      #       #
+    site        #       #
+    ...         ...     ...
+    """
+    # Set the table
+    table = repo_name + '\n' +\
+            'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n' +\
+            'Totals' + '\t\t' + str(total_count) + '\t' + str(total_uniques) + '\n'
+    # Add rows to the table
+    for row in refs:
+        # Note: The referring website can sometimes be quite lengthy
+        # so the output for this part can get buggy depending on your terminal
+        if len(row) >= 8:
+            table += '%.8s...\t%s\t%s \n' % (row, refs[row][0], refs[row][1])
+        else:
+            table += '%.8s\t\t%s\t%s \n' % (row, refs[row][0], refs[row][1])
+
+    return table
+
+
+def store_csv(file_path, repo, json_response, response_type):
     """ Store the traffic stats as a CSV, with schema:
     repo_name, date, views, unique_visitors
 
     :param repo: str - the GitHub repository name
     :param json_response: json - the json input
+    :param response_type: str - 'views', 'clones', ''
     """
     repo_name = repo
     # # Not writing Totals stats into the CSV to maintain normalization
@@ -104,7 +148,7 @@ def store_csv(repo, json_response):
     # total_uniques = str(json_response['uniques'])
 
     dates_and_views = OrderedDict()
-    detailed_views = json_response['views']
+    detailed_views = json_response[response_type]  # 'views', 'clones'
     for row in detailed_views:
         utc_date = str(row['timestamp'][0:10])
         dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
@@ -112,22 +156,22 @@ def store_csv(repo, json_response):
     # Starting up the CSV, writing the headers in a first pass
     # Check if existing CSV
     try:
-        csv_file = open(csv_file_name).readlines()
+        csv_file = open(file_path).readlines()
         if csv_file:
             for i in dates_and_views:
                 row = [repo_name, i, dates_and_views[i][0], dates_and_views[i][1]]
-                with open(csv_file_name, 'a') as csvfile:
+                with open(file_path, 'a') as csvfile:
                     csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     csv_writer.writerow(row)
     except IOError:
-        headers = ['repository_name', 'date', 'views', 'unique_visitors']
-        with open(csv_file_name, 'a') as csvfile:
+        headers = ['repository_name', 'date', response_type.lower(), 'unique_visitors/cloners']
+        with open(file_path, 'a') as csvfile:
             csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(headers)
 
         for i in dates_and_views:
             row = [repo_name, i, dates_and_views[i][0], dates_and_views[i][1]]
-            with open(csv_file_name, 'a') as csvfile:
+            with open(file_path, 'a') as csvfile:
                 csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csv_writer.writerow(row)
 
@@ -161,9 +205,12 @@ def main(username, repo='ALL', save_csv='save_csv'):
                 print(json_to_table(repo, traffic_response, 'repos'))
                 clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
                 print(json_to_table(repo, clones_response, 'clones'))
+                referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
+                print(json_to_table_referrers(repo, referrers_response))
                 # Saving data
                 if save_csv == 'save_csv':
-                    store_csv(repo, traffic_response)
+                    store_csv(csv_file_name, repo, traffic_response, 'views')
+                    store_csv(csv_file_name_clones, repo, clones_response, 'clones')
     else:
         # Or just request 1 repo
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers).json()
@@ -174,9 +221,12 @@ def main(username, repo='ALL', save_csv='save_csv'):
         print(json_to_table(repo, traffic_response, 'repos'))
         clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
         print(json_to_table(repo, clones_response, 'clones'))
+        referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
+        print(json_to_table_referrers(repo, referrers_response))
         # Saving data
         if save_csv == 'save_csv':
-            store_csv(repo, traffic_response)
+            store_csv(csv_file_name, repo, traffic_response, 'views')
+            store_csv(csv_file_name_clones, repo, clones_response, 'clones')
 
 
 if __name__ == '__main__':
