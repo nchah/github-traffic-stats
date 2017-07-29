@@ -14,7 +14,8 @@ awk -F"," '!seen[$1, $2]++' merged.csv > merged2.csv
 # Sort the final rows in alpha order - first by the first col., then by second col.
 sort -k1,1 -k2,2 merged2.csv > merged3.csv
 
-# Rename and cleanup, commented out just in case
+# Rename and cleanup output
+# Commented out 'rm' commands just in case
 #rm merged.csv
 #rm merged2.csv
 #mv merged3.csv merged.csv
