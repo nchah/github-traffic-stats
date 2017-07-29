@@ -1,20 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import csv, os
+import csv
+import os
 from collections import OrderedDict
 import datetime
 import getpass
 import requests
 
-"""
-TODO:
-- DONE 2016-09-05: Get all repos optionally
-- DONE 2016-09-06: Pretty format JSON response
-- DONE 2016-09-30: Save as CSV output
-- DONE 2017-02-24: Fixed path to savefiles
 
-"""
 # Globals
 current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
 path=os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +17,7 @@ csv_file_name = top_dir+'/data/' + current_timestamp + '-traffic-stats.csv'
 
 
 def send_request(resource, auth, repo=None, headers=None):
-    """Send request to Github API
+    """ Send request to specific Github API endpoint
     :param resource: string - specify the API to call
     :param auth: tuple - username-password tuple
     :param repo: string - if specified, the specific repository name
@@ -42,64 +36,67 @@ def send_request(resource, auth, repo=None, headers=None):
         base_url = base_url + auth[0] + '/repos'
         response = requests.get(base_url, auth=auth)
         return response
+    if resource == 'clones':
+        # GET /repos/:owner/:repo/traffic/clones <- from developer.github.com/v3/repos/traffic/#clones
+        base_url = 'https://api.github.com/repos/'
+        base_url = base_url + auth[0] + '/' + repo + '/traffic/clones'
+        response = requests.get(base_url, auth=auth, headers=headers)
+        return response
+    if resource == 'referrers':
+        # GET /repos/:owner/:repo/traffic/popular/referrers <- from developer.github.com/v3/repos/traffic/#list-referrers
+        base_url = 'https://api.github.com/repos/'
+        base_url = base_url + auth[0] + '/' + repo + '/traffic/popular/referrers'
+        response = requests.get(base_url, auth=auth, headers=headers)
+        return response
 
 
-def timestamp_to_utc(timestamp):
-    """Convert unix timestamp to UTC date
-    :param timestamp: int - the unix timestamp integer
-    :return: utc_data - the date in YYYY-MM-DD format
-    """
-    # deprecated pre-10/31/2016
-    timestamp = int(str(timestamp)[0:10])
-    utc_date = datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
-    # utc_date = timestamp[0:10]
-    return utc_date
-
-
-def json_to_table(repo, json_response):
-    """Parse traffic stats in JSON and format into a table
+def json_to_table(repo, json_response, response_type):
+    """ Parse traffic stats in JSON and format into a table
     :param repo: str - the GitHub repository name
     :param json_response: json - the json input
+    :param response_type: str - specifies the kind of table to create
     :return: table: str - for printing on command line
     """
+    if response_type == 'repos':
+        label1 = "Views"
+        label2 = "Uniaue visitors"
+    if response_type == 'clones':
+        label1 = "Clones"
+        label2 = "Unique cloners"
+
     repo_name = repo
-    total_views = str(json_response['count'])
+    total_label1 = str(json_response['count'])
     total_uniques = str(json_response['uniques'])
 
-    dates_and_views = OrderedDict()
-    detailed_views = json_response['views']
-    for row in detailed_views:
-        # utc_date = timestamp_to_utc(int(row['timestamp']))
+    # If there is granular date-level data
+    dates_and_label1 = OrderedDict()
+    detailed_label1 = json_response[label1.lower()]  # 'views', 'clones'
+    for row in detailed_label1:
         utc_date = str(row['timestamp'][0:10])
-        dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
+        dates_and_label1[utc_date] = (str(row['count']), str(row['uniques']))
 
-    """Table template
+    """ Table template
     repo_name
-    Date        Views   Unique visitors
+    Date        label1  label2
     Totals      #       #
     date        #       #
     ...         ...     ...
     """
-    table_alt = repo_name + '\n' +\
-            '# Total Views:' + '\t' + total_views + '\n' + '# Total Unique:' + '\t' + total_uniques + '\n' +\
-            'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n'
-
     table = repo_name + '\n' +\
-            'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n' +\
-            'Totals' + '\t\t' + total_views + '\t' + total_uniques + '\n'
-    for row in dates_and_views:
-        table += row + '\t' + dates_and_views[row][0] + '\t' + dates_and_views[row][1] + '\n'
+            'Date' + '\t\t' + label1 + '\t' + label2 + '\n' +\
+            'Totals' + '\t\t' + total_label1 + '\t' + total_uniques + '\n'
+    for row in dates_and_label1:
+        table += row + '\t' + dates_and_label1[row][0] + '\t' + dates_and_label1[row][1] + '\n'
 
     return table
 
 
 def store_csv(repo, json_response):
-    """Store the traffic stats as a CSV, with schema:
+    """ Store the traffic stats as a CSV, with schema:
     repo_name, date, views, unique_visitors
 
     :param repo: str - the GitHub repository name
     :param json_response: json - the json input
-    :return:
     """
     repo_name = repo
     # # Not writing Totals stats into the CSV to maintain normalization
@@ -109,7 +106,6 @@ def store_csv(repo, json_response):
     dates_and_views = OrderedDict()
     detailed_views = json_response['views']
     for row in detailed_views:
-        # utc_date = timestamp_to_utc(int(row['timestamp']))
         utc_date = str(row['timestamp'][0:10])
         dates_and_views[utc_date] = (str(row['count']), str(row['uniques']))
 
@@ -135,15 +131,12 @@ def store_csv(repo, json_response):
                 csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csv_writer.writerow(row)
 
-    return ''
-
 
 def main(username, repo='ALL', save_csv='save_csv'):
-    """Query the GitHub Traffic API
+    """ Run main code logic
     :param username: string - GitHub username
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
-    :return:
     """
     username = username.strip()
     repo = repo.strip()
@@ -152,33 +145,38 @@ def main(username, repo='ALL', save_csv='save_csv'):
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
     if repo == 'ALL':
-        repos_response = send_request('repos', auth_pair)
-        repos_response = repos_response.json()
+        # By default iterate over all repositories
+        repos_response = send_request('repos', auth_pair).json()
+        # Error handling in case of {'documentation_url': 'https://developer.github.com/v3', 'message': 'Not Found'}
         try:
             if repos_response.get('message'):
                 print(repos_response['message'])
-                return 'Code done'
+                return 'Code done.'
         except AttributeError:
             repos = []
             for repo in repos_response:
                 repos.append(repo['name'])
             for repo in repos:
-                traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
-                traffic_response = traffic_response.json()
-                print(json_to_table(repo, traffic_response))
+                traffic_response = send_request('traffic', auth_pair, repo, traffic_headers).json()
+                print(json_to_table(repo, traffic_response, 'repos'))
+                clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
+                print(json_to_table(repo, clones_response, 'clones'))
+                # Saving data
                 if save_csv == 'save_csv':
                     store_csv(repo, traffic_response)
     else:
-        traffic_response = send_request('traffic', auth_pair, repo, traffic_headers)
-        traffic_response = traffic_response.json()
+        # Or just request 1 repo
+        traffic_response = send_request('traffic', auth_pair, repo, traffic_headers).json()
+        # Error handling in case of {'documentation_url': 'https://developer.github.com/v3', 'message': 'Not Found'}
         if traffic_response.get('message'):
             print(traffic_response['message'])
-            return 'Code done'
-        print(json_to_table(repo, traffic_response))
+            return 'Code done.'
+        print(json_to_table(repo, traffic_response, 'repos'))
+        clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
+        print(json_to_table(repo, clones_response, 'clones'))
+        # Saving data
         if save_csv == 'save_csv':
             store_csv(repo, traffic_response)
-
-    return ''
 
 
 if __name__ == '__main__':
