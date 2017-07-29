@@ -59,7 +59,7 @@ def json_to_table(repo, json_response, response_type):
     """
     if response_type == 'repos':
         label1 = "Views"
-        label2 = "Uniaue visitors"
+        label2 = "Unique visitors"
     if response_type == 'clones':
         label1 = "Clones"
         label2 = "Unique cloners"
