@@ -11,8 +11,8 @@ import requests
 
 # Globals
 current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
-path=os.path.dirname(os.path.abspath(__file__))
-top_dir=os.path.split(path)[0]
+path = os.path.dirname(os.path.abspath(__file__))
+top_dir = os.path.split(path)[0]
 csv_file_name = top_dir+'/data/' + current_timestamp + '-traffic-stats.csv'
 
 
