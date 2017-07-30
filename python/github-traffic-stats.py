@@ -38,13 +38,13 @@ def send_request(resource, auth, repo=None, headers=None):
         base_url = base_url + auth[0] + '/repos'
         response = requests.get(base_url, auth=auth)
         return response
-    if resource == 'clones':
+    elif resource == 'clones':
         # GET /repos/:owner/:repo/traffic/clones <- from developer.github.com/v3/repos/traffic/#clones
         base_url = 'https://api.github.com/repos/'
         base_url = base_url + auth[0] + '/' + repo + '/traffic/clones'
         response = requests.get(base_url, auth=auth, headers=headers)
         return response
-    if resource == 'referrers':
+    elif resource == 'referrers':
         # GET /repos/:owner/:repo/traffic/popular/referrers <- from developer.github.com/v3/repos/traffic/#list-referrers
         base_url = 'https://api.github.com/repos/'
         base_url = base_url + auth[0] + '/' + repo + '/traffic/popular/referrers'
@@ -59,10 +59,12 @@ def json_to_table(repo, json_response, response_type):
     :param response_type: str - specifies the kind of table to create
     :return: table: str - for printing on command line
     """
-    if response_type == 'repos':
+    if response_type == 'traffic':
+        label0 = "Visitors"
         label1 = "Views"
         label2 = "Unique visitors"
     if response_type == 'clones':
+        label0 = "Git clones"
         label1 = "Clones"
         label2 = "Unique cloners"
 
@@ -85,7 +87,7 @@ def json_to_table(repo, json_response, response_type):
     ...         ...     ...
     """
     # Set the table
-    table = repo_name + '\n' +\
+    table = '> ' + repo_name + ' - ' + label0 + '\n' +\
             'Date' + '\t\t' + label1 + '\t' + label2 + '\n' +\
             'Totals' + '\t\t' + total_label1 + '\t' + total_uniques + '\n'
     # Add rows to the table
@@ -120,7 +122,7 @@ def json_to_table_referrers(repo, json_response):
     ...         ...     ...
     """
     # Set the table
-    table = repo_name + '\n' +\
+    table = '> ' + repo_name + ' - Referring sites' + '\n' +\
             'Date' + '\t\t' + 'Views' + '\t' + 'Unique visitors' + '\n' +\
             'Totals' + '\t\t' + str(total_count) + '\t' + str(total_uniques) + '\n'
     # Add rows to the table
@@ -238,7 +240,7 @@ def main(username, repo='ALL', save_csv='save_csv'):
                 repos.append(repo['name'])
             for repo in repos:
                 traffic_response = send_request('traffic', auth_pair, repo, traffic_headers).json()
-                print(json_to_table(repo, traffic_response, 'repos'))
+                print(json_to_table(repo, traffic_response, 'traffic'))
                 clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
                 print(json_to_table(repo, clones_response, 'clones'))
                 referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
@@ -255,7 +257,7 @@ def main(username, repo='ALL', save_csv='save_csv'):
         if traffic_response.get('message'):
             print(traffic_response['message'])
             return 'Code done.'
-        print(json_to_table(repo, traffic_response, 'repos'))
+        print(json_to_table(repo, traffic_response, 'traffic'))
         clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
         print(json_to_table(repo, clones_response, 'clones'))
         referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
