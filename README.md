@@ -28,7 +28,7 @@ $ python3 github-traffic-stats.py 'nchah' 'github-traffic-stats' 'save_csv'
 Password:* (passwords are hidden)
 github-traffic-stats
 Date        Views   Unique visitors
-Totals      98      33
+Totals      125     36
 2017-07-16  1       1
 2017-07-17  10      2
 2017-07-19  11      4
@@ -41,15 +41,22 @@ Totals      98      33
 2017-07-26  1       1
 2017-07-27  1       1
 2017-07-28  6       4
-2017-07-29  2       2
+2017-07-29  26      5
+2017-07-30  3       1
 
 github-traffic-stats
 Date        Clones  Unique cloners
-Totals      4       4
+Totals      5       5
 2017-07-17  1       1
 2017-07-24  2       2
 2017-07-26  1       1
+2017-07-29  1       1
 
+github-traffic-stats
+Date        Views   Unique visitors
+Totals      44      27
+Google      33      24
+github.c... 11      3
 
 $ # Or to get stats on all of your repositories
 $ python3 github-traffic-stats.py 'nchah' 'ALL' 'save_csv'
