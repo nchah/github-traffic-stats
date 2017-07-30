@@ -15,6 +15,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 top_dir = os.path.split(path)[0]
 csv_file_name = top_dir+'/data/' + current_timestamp + '-traffic-stats.csv'
 csv_file_name_clones = top_dir+'/data/' + current_timestamp + '-clone-stats.csv'
+csv_file_name_referrers = top_dir+'/data/' + current_timestamp + '-referrer-stats.csv'
 
 
 def send_request(resource, auth, repo=None, headers=None):
@@ -134,10 +135,45 @@ def json_to_table_referrers(repo, json_response):
     return table
 
 
+def store_csv_referrers(file_path, repo, json_response):
+    """ Store the traffic stats as a CSV, with schema:
+    repo_name, site, views, unique_visitors
+    :param file_path: str - path to store CSV
+    :param repo: str - the GitHub repository name
+    :param json_response: json - the json input
+    """
+    repo_name = repo
+    sites_and_views = OrderedDict()
+    for row in json_response:
+        site = row['referrer']
+        sites_and_views[site] = (str(row['count']), str(row['uniques']))
+    # Starting up the CSV, writing the headers in a first pass
+    # Check if existing CSV
+    try:
+        csv_file = open(file_path).readlines()
+        if csv_file:
+            for i in sites_and_views:
+                row = [repo_name, i, sites_and_views[i][0], sites_and_views[i][1]]
+                with open(file_path, 'a') as csvfile:
+                    csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    csv_writer.writerow(row)
+    except IOError:
+        headers = ['repository_name', 'site', 'views', 'unique_visitors/cloners']
+        with open(file_path, 'a') as csvfile:
+            csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(headers)
+
+        for i in sites_and_views:
+            row = [repo_name, i, sites_and_views[i][0], sites_and_views[i][1]]
+            with open(file_path, 'a') as csvfile:
+                csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                csv_writer.writerow(row)
+
+
 def store_csv(file_path, repo, json_response, response_type):
     """ Store the traffic stats as a CSV, with schema:
-    repo_name, date, views, unique_visitors
-
+    repo_name, date, views, unique_visitors/cloners
+    :param file_path: str - path to store CSV
     :param repo: str - the GitHub repository name
     :param json_response: json - the json input
     :param response_type: str - 'views', 'clones', ''
@@ -211,6 +247,7 @@ def main(username, repo='ALL', save_csv='save_csv'):
                 if save_csv == 'save_csv':
                     store_csv(csv_file_name, repo, traffic_response, 'views')
                     store_csv(csv_file_name_clones, repo, clones_response, 'clones')
+                    store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
     else:
         # Or just request 1 repo
         traffic_response = send_request('traffic', auth_pair, repo, traffic_headers).json()
@@ -227,7 +264,7 @@ def main(username, repo='ALL', save_csv='save_csv'):
         if save_csv == 'save_csv':
             store_csv(csv_file_name, repo, traffic_response, 'views')
             store_csv(csv_file_name_clones, repo, clones_response, 'clones')
-
+            store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
