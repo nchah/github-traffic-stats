@@ -11,11 +11,10 @@ import requests
 
 # Globals
 current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
-path = os.path.dirname(os.path.abspath(__file__))
-top_dir = os.path.split(path)[0]
-csv_file_name = top_dir+'/data/' + current_timestamp + '-traffic-stats.csv'
-csv_file_name_clones = top_dir+'/data/' + current_timestamp + '-clone-stats.csv'
-csv_file_name_referrers = top_dir+'/data/' + current_timestamp + '-referrer-stats.csv'
+path = os.path.abspath(os.path.dirname(__file__))
+csv_file_name = current_timestamp + '-traffic-stats.csv'
+csv_file_name_clones = current_timestamp + '-clone-stats.csv'
+csv_file_name_referrers = current_timestamp + '-referrer-stats.csv'
 
 
 def send_request(resource, auth, repo=None, headers=None):
@@ -214,14 +213,19 @@ def store_csv(file_path, repo, json_response, response_type):
                 csv_writer.writerow(row)
 
 
-def main(username, repo='ALL', save_csv='save_csv'):
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('username', help='Github username')
+    parser.add_argument('repo', help='User\'s repo', default='ALL', nargs='?')
+    parser.add_argument('save_csv', default='save_csv', help='Set to "no_csv" if no CSV should be saved', nargs='?')
+    args = parser.parse_args()
     """ Run main code logic
     :param username: string - GitHub username
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
     """
-    username = username.strip()
-    repo = repo.strip()
+    username = args.username.strip()
+    repo = args.repo.strip()
     pw = getpass.getpass('Password:')
     auth_pair = (username, pw)
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
@@ -246,7 +250,7 @@ def main(username, repo='ALL', save_csv='save_csv'):
                 referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
                 print(json_to_table_referrers(repo, referrers_response))
                 # Saving data
-                if save_csv == 'save_csv':
+                if args.save_csv == 'save_csv':
                     store_csv(csv_file_name, repo, traffic_response, 'views')
                     store_csv(csv_file_name_clones, repo, clones_response, 'clones')
                     store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
@@ -263,15 +267,11 @@ def main(username, repo='ALL', save_csv='save_csv'):
         referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
         print(json_to_table_referrers(repo, referrers_response))
         # Saving data
-        if save_csv == 'save_csv':
+        if args.save_csv == 'save_csv':
             store_csv(csv_file_name, repo, traffic_response, 'views')
             store_csv(csv_file_name_clones, repo, clones_response, 'clones')
             store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('username', help='Github username')
-    parser.add_argument('repo', help='User\'s repo')
-    parser.add_argument('save_csv', help='Set to "no_csv" if no CSV should be saved')
-    args = parser.parse_args()
-    main(args.username, args.repo, args.save_csv)
+    main()
