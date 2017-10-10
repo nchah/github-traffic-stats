@@ -12,6 +12,12 @@ A few use cases to show why this may be useful.
 - Storing the traffic stats for future reference.
 - Checking how often your code is cloned.
 
+## Installation
+
+```
+pip install github_traffic_stats
+```
+
 
 ### Dependencies
 
@@ -24,7 +30,7 @@ There are a number of GitHub [libraries](https://developer.github.com/libraries/
 Run on the command line with either `python` or `python3`.
 
 ```
-$ python3 github-traffic-stats.py 'nchah' 'github-traffic-stats' 'save_csv'
+$ python3 gts 'nchah' 'github-traffic-stats' 'save_csv'
 Password:* (passwords are hidden)
 > github-traffic-stats - Visitors
 Date        Views   Unique visitors
@@ -60,7 +66,7 @@ github.c... 11      3
 
 
 $ # Or to get stats on all of your repositories
-$ python3 github-traffic-stats.py 'nchah' 'ALL' 'save_csv'
+$ gts 'nchah' 'ALL' 'save_csv'
 Password:* (passwords are hidden)
 ...
 
