@@ -32,6 +32,21 @@ There are a number of GitHub `libraries`_ for Python and other
 languages, although they may not support the Repository Traffic API
 (announced on August 15, 2016).
 
+Usage
+-----
+
+::
+
+    usage: gts [-h] username [repo] [save_csv]
+
+    positional arguments:
+      username    Github username
+      repo        User's repo
+      save_csv    Set to "no_csv" if no CSV should be saved
+
+    optional arguments:
+      -h, --help  show this help message and exit
+
 Run
 ~~~
 
