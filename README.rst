@@ -24,7 +24,7 @@ Installation
     pip install github_traffic_stats
 
 Dependencies
-~~~~~~~~~~~~
+------------
 
 -  Requests (`kennethreitz/requests`_)
 
@@ -48,7 +48,7 @@ Usage
       -h, --help  show this help message and exit
 
 Run
-~~~
+---
 
 Run on the command line with either ``python`` or ``python3``.
 
