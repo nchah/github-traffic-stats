@@ -8,6 +8,8 @@ from setuptools import setup, Command
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+with open("README.rst", "rb") as f:
+    long_descr = f.read().decode("utf-8")
 
 class PublishCommand(Command):
     """Support setup.py publish."""
@@ -45,10 +47,11 @@ class PublishCommand(Command):
 setup(
     name="github_traffic_stats",
     packages=["gts"],
+    long_description=long_descr,
     entry_points={
         "console_scripts": ['gts = gts.main:main']
     },
-    version='1.0.0',
+    version='1.0.1',
     keywords=['github'],
     description="Get statistics on web traffic to your GitHub repositories.",
     author="Niel Chah, Anthony Bloomer",
