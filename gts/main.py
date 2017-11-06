@@ -222,6 +222,7 @@ def main():
     parser.add_argument('save_csv', default='save_csv', help='Set to "no_csv" if no CSV should be saved', nargs='?')
     args = parser.parse_args()
     """ Run main code logic
+    :param organization: string - GitHub organization (frequently username)
     :param username: string - GitHub username
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
@@ -235,7 +236,7 @@ def main():
 
     if repo == 'ALL':
         # By default iterate over all repositories
-        repos_response = send_request('repos', auth_pair).json()
+        repos_response = send_request('repos', organization, auth_pair).json()
         # Error handling in case of {'documentation_url': 'https://developer.github.com/v3', 'message': 'Not Found'}
         try:
             if repos_response.get('message'):
@@ -246,11 +247,11 @@ def main():
             for repo in repos_response:
                 repos.append(repo['name'])
             for repo in repos:
-                traffic_response = send_request('traffic', auth_pair, repo, traffic_headers).json()
+                traffic_response = send_request('traffic', organization, auth_pair, repo, traffic_headers).json()
                 print(json_to_table(repo, traffic_response, 'traffic'))
-                clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
+                clones_response = send_request('clones', organization, auth_pair, repo, traffic_headers).json()
                 print(json_to_table(repo, clones_response, 'clones'))
-                referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
+                referrers_response = send_request('referrers', organization, auth_pair, repo, traffic_headers).json()
                 print(json_to_table_referrers(repo, referrers_response))
                 # Saving data
                 if args.save_csv == 'save_csv':
@@ -265,9 +266,9 @@ def main():
             print(traffic_response['message'])
             return 'Code done.'
         print(json_to_table(repo, traffic_response, 'traffic'))
-        clones_response = send_request('clones', auth_pair, repo, traffic_headers).json()
+        clones_response = send_request('clones', organization, auth_pair, repo, traffic_headers).json()
         print(json_to_table(repo, clones_response, 'clones'))
-        referrers_response = send_request('referrers', auth_pair, repo, traffic_headers).json()
+        referrers_response = send_request('referrers', organization, auth_pair, repo, traffic_headers).json()
         print(json_to_table_referrers(repo, referrers_response))
         # Saving data
         if args.save_csv == 'save_csv':
