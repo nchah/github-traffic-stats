@@ -93,6 +93,10 @@ Run on the command line with either ``python`` or ``python3``.
     $ # Or to get stats on all of your repositories
     $ gts 'nchah' 'ALL' 'save_csv'
     Password:* (passwords are hidden)
+    
+    $ # Or if you are running on an organization repo (for example NREL's SAM repo) as a user with access
+    $ gts 'nickdiorio' 'SAM' 'save_csv' -o 'NREL'
+    Password:* (passwords are hidden)
     ...
 
 Traffic data stored in CSV files with columns:
