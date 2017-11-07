@@ -228,9 +228,12 @@ def main():
     :optional:
 	param -o, --organization: string - GitHub organization (if different from username)
     """
-    organization = args.organization.strip()
     username = args.username.strip()
     repo = args.repo.strip()
+    organization = username
+    if args.organization != None:
+        organization = args.organization.strip()
+
     pw = getpass.getpass('Password:')
     auth_pair = (username, pw)
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
