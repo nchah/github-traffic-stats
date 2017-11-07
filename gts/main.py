@@ -216,16 +216,17 @@ def store_csv(file_path, repo, json_response, response_type):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('organization', help='Github organization')
     parser.add_argument('username', help='Github username')
     parser.add_argument('repo', help='User\'s repo', default='ALL', nargs='?')
     parser.add_argument('save_csv', default='save_csv', help='Set to "no_csv" if no CSV should be saved', nargs='?')
+    parser.add_argument('-o', '--organization', default=None, help='Github organization')
     args = parser.parse_args()
     """ Run main code logic
-    :param organization: string - GitHub organization (frequently username)
     :param username: string - GitHub username
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
+    :optional:
+	param -o, --organization: string - GitHub organization (if different from username)
     """
     organization = args.organization.strip()
     username = args.username.strip()
