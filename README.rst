@@ -37,7 +37,7 @@ Usage
 
 ::
 
-    usage: gts [-h] username [repo] [save_csv]
+    usage: gts [-h] username [repo] [save_csv] [-o]
 
     positional arguments:
       username    Github username
@@ -46,6 +46,7 @@ Usage
 
     optional arguments:
       -h, --help  show this help message and exit
+      -o, --organization specify Github organization if different from username
 
 Run
 ---
