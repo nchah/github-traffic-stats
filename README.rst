@@ -37,7 +37,7 @@ Usage
 
 ::
 
-    usage: gts [-h] username [repo] [save_csv]
+    usage: gts [-h] username [repo] [save_csv] [-o]
 
     positional arguments:
       username    Github username
@@ -46,6 +46,7 @@ Usage
 
     optional arguments:
       -h, --help  show this help message and exit
+      -o, --organization specify Github organization if different from username
 
 Run
 ---
@@ -91,6 +92,10 @@ Run on the command line with either ``python`` or ``python3``.
 
     $ # Or to get stats on all of your repositories
     $ gts 'nchah' 'ALL' 'save_csv'
+    Password:* (passwords are hidden)
+    
+    $ # Or if you are running on an organization repo (for example NREL's SAM repo) as a user with access
+    $ gts 'nickdiorio' 'SAM' 'save_csv' -o 'NREL'
     Password:* (passwords are hidden)
     ...
 
