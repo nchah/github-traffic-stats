@@ -21,7 +21,7 @@ def send_request(resource, organization, auth, repo=None, headers=None):
     """ Send request to specific Github API endpoint
     :param resource: string - specify the API to call
     :param organization: string - specify the repository organization if not owner by username
-    :param auth: tuple - username-password tuple
+    :param auth: username:password separated string - if no password specified, interactive dialog used
     :param repo: string - if specified, the specific repository name
     :param headers: dict - if specified, the request headers
     :return: response - GET request response
@@ -222,19 +222,28 @@ def main():
     parser.add_argument('-o', '--organization', default=None, help='Github organization')
     args = parser.parse_args()
     """ Run main code logic
-    :param username: string - GitHub username
+    :param username: string - GitHub username, or username:password pair
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
     :optional:
 	param -o, --organization: string - GitHub organization (if different from username)
     """
-    username = args.username.strip()
+
+    str = args.username.strip()
+    sub = str.split(':', 1 )
+    len_sub = len(sub)
+
+    username = sub[0].strip()
+    if len_sub > 1:
+        pw = sub[1].strip()
+    else :
+        pw = getpass.getpass('Password:')
+
     repo = args.repo.strip()
     organization = username
     if args.organization != None:
         organization = args.organization.strip()
 
-    pw = getpass.getpass('Password:')
     auth_pair = (username, pw)
     traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
