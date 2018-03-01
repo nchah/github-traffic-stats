@@ -51,7 +51,7 @@ Usage
       -h, --help  show this help message and exit
       -o, --organization specify Github organization if different from username
        
-    Information on `tokens`_.
+Information on `tokens`_ .
 
 Run
 ---
