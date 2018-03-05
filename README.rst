@@ -38,15 +38,20 @@ Usage
 ::
 
     usage: gts [-h] username [repo] [save_csv] [-o]
+       or: 
+    usage: gts [-h] username:password [repo] [save_csv] [-o]
 
     positional arguments:
       username    Github username
+      password    Github password for 'username', or access token
       repo        User's repo
       save_csv    Set to "no_csv" if no CSV should be saved
 
     optional arguments:
       -h, --help  show this help message and exit
       -o, --organization specify Github organization if different from username
+       
+Information on `Github Access Tokens`_.
 
 Run
 ---
@@ -124,3 +129,5 @@ A list of the references used for this project.
 .. _libraries: https://developer.github.com/libraries/
 .. _GitHub API: https://developer.github.com/v3/
 .. _Preview the Repository Traffic API (August 15, 2016): https://developer.github.com/changes/2016-08-15-traffic-api-preview/
+.. _Github Access Tokens: https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+
