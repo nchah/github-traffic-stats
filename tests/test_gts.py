@@ -18,7 +18,6 @@ class GithubTrafficStatsTest(unittest.TestCase):
     def test_send_request(self):
         response = send_request(auth=self.auth_pair, organization=self.username, resource='repos',
                                 headers=self.traffic_headers)
-        print(response.content)
         logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
@@ -26,7 +25,6 @@ class GithubTrafficStatsTest(unittest.TestCase):
     def test_store_csv(self):
         response = send_request(auth=self.auth_pair, organization=self.username, resource='traffic',
                                 headers=self.traffic_headers, repo='github-traffic-stats')
-        print(response.content)
         logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
