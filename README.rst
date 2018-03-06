@@ -28,11 +28,11 @@ Dependencies
 
 -  Requests (`kennethreitz/requests`_)
 
-Install the requirements by running:
+Install the requirements by running: 
 
-```shell
-$ pip install -r requirements.txt
-```
+::
+
+    pip install -r requirements.txt
 
 There are a number of GitHub `libraries`_ for Python and other
 languages, although they may not support the Repository Traffic API
