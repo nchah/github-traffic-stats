@@ -1,6 +1,9 @@
 github-traffic-stats
 ====================
 
+.. image:: https://travis-ci.org/AnthonyBloomer/github-traffic-stats.svg?branch=master
+    :target: https://travis-ci.org/AnthonyBloomer/github-traffic-stats
+
 Get statistics on web traffic to your GitHub repositories.
 
 Python CLI
