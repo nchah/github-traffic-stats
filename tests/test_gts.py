@@ -1,6 +1,10 @@
 import unittest
 import os
+import logging
 from gts import send_request, store_csv
+
+logging.basicConfig()
+logger = logging.getLogger(__file__)
 
 
 class GithubTrafficStatsTest(unittest.TestCase):
@@ -12,11 +16,13 @@ class GithubTrafficStatsTest(unittest.TestCase):
 
     def test_send_request(self):
         response = send_request('repos', self.username, self.auth_pair, self.traffic_headers)
+        logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
 
     def test_store_csv(self):
         response = send_request('traffic', self.username, self.auth_pair, 'github-traffic-stats', self.traffic_headers)
+        logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
         json_response = response.json()
