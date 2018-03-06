@@ -15,20 +15,23 @@ class GithubTrafficStatsTest(unittest.TestCase):
         self.traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
     def test_send_request(self):
-        response = send_request('repos', self.username, self.auth_pair, self.traffic_headers)
+        response = send_request(auth=self.auth_pair, organization=self.username, resource='repos',
+                                headers=self.traffic_headers)
         logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
 
     def test_store_csv(self):
-        response = send_request('traffic', self.username, self.auth_pair, 'github-traffic-stats', self.traffic_headers)
+        response = send_request(auth=self.auth_pair, organization=self.username, resource='traffic',
+                                headers=self.traffic_headers, repo='github-traffic-stats')
         logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
         json_response = response.json()
-        self.assertTrue('count' in json_response)
-        self.assertTrue('uniques' in json_response)
-        store_csv('test.csv', json_response, 'github-traffic-stats', 'views')
+        self.assertTrue(len(json_response) > 0)
+        self.assertIn('count', json_response)
+        self.assertIn('uniques', json_response)
+        store_csv(file_path='test.csv', json_response=json_response, repo='github-traffic-stats', response_type='views')
         cur_dir = os.getcwd()
         file_list = os.listdir(cur_dir)
         has_generated_csv = False
