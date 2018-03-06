@@ -11,7 +11,8 @@ class GithubTrafficStatsTest(unittest.TestCase):
 
     def setUp(self):
         self.username = "anthonybloomer"
-        self.auth_pair = (self.username, os.environ.get('GITHUB_PASSWORD'))
+        self.auth_pair = (self.username, os.environ.get('github_pass'))
+
         self.traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
     def test_send_request(self):
