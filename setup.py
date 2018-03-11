@@ -51,13 +51,13 @@ setup(
     entry_points={
         "console_scripts": ['gts = gts.main:main']
     },
-    version='1.0.1',
-    keywords=['github'],
+    version='1.0.2',
+    keywords=['github', 'traffic', 'api'],
     description="Get statistics on web traffic to your GitHub repositories.",
     author="Niel Chah, Anthony Bloomer",
-    url="https://github.com/AnthonyBloomer/github-traffic-stats",
+    url="https://github.com/nchah/github-traffic-stats",
     install_requires=[
-        'requests',
+        'requests'
     ],
     classifiers=[
         'Intended Audience :: Developers',

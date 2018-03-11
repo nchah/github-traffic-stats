@@ -1,6 +1,9 @@
 github-traffic-stats
 ====================
 
+.. image:: https://travis-ci.org/nchah/github-traffic-stats.svg?branch=master
+    :target: https://travis-ci.org/nchah/github-traffic-stats
+
 Get statistics on web traffic to your GitHub repositories.
 
 Python CLI
@@ -27,6 +30,12 @@ Dependencies
 ------------
 
 -  Requests (`kennethreitz/requests`_)
+
+Install the requirements by running: 
+
+::
+
+    pip install -r requirements.txt
 
 There are a number of GitHub `libraries`_ for Python and other
 languages, although they may not support the Repository Traffic API
