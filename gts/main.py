@@ -17,39 +17,55 @@ csv_file_name_clones = current_timestamp + '-clone-stats.csv'
 csv_file_name_referrers = current_timestamp + '-referrer-stats.csv'
 
 
-def send_request(resource, organization, auth, repo=None, headers=None):
+def send_request(resource, organization, auth, repo=None):
     """ Send request to specific Github API endpoint
     :param resource: string - specify the API to call
     :param organization: string - specify the repository organization if not owner by username
     :param auth: username:password separated string - if no password specified, interactive dialog used
     :param repo: string - if specified, the specific repository name
     :param headers: dict - if specified, the request headers
+    :param params: dict - if specified, the parameters
     :return: response - GET request response
     """
     if resource == 'traffic':
         # GET /repos/:owner/:repo/traffic/views <- from developer.github.com/v3/repos/traffic/#views
         base_url = 'https://api.github.com/repos/'
         base_url = base_url + organization + '/' + repo + '/traffic/views'
-        response = requests.get(base_url, auth=auth, headers=headers)
+        response = requests.get(base_url, auth=auth)
         return response
     elif resource == 'repos':
         # GET /user/repos <- from developer.github.com/v3/repos/#list-your-repositories
         base_url = 'https://api.github.com/users/'
         base_url = base_url + organization + '/repos'
-        response = requests.get(base_url, auth=auth)
-        return response
+        params = {'per_page': '100'}
+        response = requests.get(base_url, auth=auth, params=params)
+        headers = requests.head(base_url, auth=auth, params=params)
+        return (response, headers)
     elif resource == 'clones':
         # GET /repos/:owner/:repo/traffic/clones <- from developer.github.com/v3/repos/traffic/#clones
         base_url = 'https://api.github.com/repos/'
         base_url = base_url + organization + '/' + repo + '/traffic/clones'
-        response = requests.get(base_url, auth=auth, headers=headers)
+        response = requests.get(base_url, auth=auth)
         return response
     elif resource == 'referrers':
         # GET /repos/:owner/:repo/traffic/popular/referrers <- from developer.github.com/v3/repos/traffic/#list-referrers
         base_url = 'https://api.github.com/repos/'
         base_url = base_url + organization + '/' + repo + '/traffic/popular/referrers'
-        response = requests.get(base_url, auth=auth, headers=headers)
+        response = requests.get(base_url, auth=auth)
         return response
+
+
+def send_request_pagination(url, auth):
+    """ Send request to specific Github API endpoint using pagination
+    :param url: string - the URL from the "response.links" header
+    :param auth: username:password separated string - if no password specified, interactive dialog used
+    :param params: dict - if specified, the parameters
+    :return: response - GET request response
+    """
+    params = {'per_page': '100'}
+    response = requests.get(url, auth=auth)
+    headers = requests.head(url)
+    return (response, headers)
 
 
 def json_to_table(repo, json_response, response_type):
@@ -226,7 +242,7 @@ def main():
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
     :optional:
-	param -o, --organization: string - GitHub organization (if different from username)
+    param -o, --organization: string - GitHub organization (if different from username)
     """
 
     str = args.username.strip()
@@ -245,26 +261,39 @@ def main():
         organization = args.organization.strip()
 
     auth_pair = (username, pw)
-    traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
+    # traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
     if repo == 'ALL':
         # By default iterate over all repositories
-        repos_response = send_request('repos', organization, auth_pair).json()
-        # Error handling in case of {'documentation_url': 'https://developer.github.com/v3', 'message': 'Not Found'}
+        repos = []
+        repos_response = send_request('repos', organization, auth_pair)
+        repos_json = repos_response[0]  # 1st element from requests.get()
+        # print(repos_json.json())
+        repos_links = repos_response[1].links  # 2nd element from requests.head()
+        # Error handling in case of {'documentation_url':'https://developer.github.com/v3','message':'Not Found'}
         try:
-            if repos_response.get('message'):
-                print(repos_response['message'])
-                return 'Code done.'
+            err_msg = repos_json.json().get('message')
+            print(err_msg)
+            return 'Code done.'
         except AttributeError:
-            repos = []
-            for repo in repos_response:
+            # Add the repos from the first request
+            for repo in repos_json.json():
                 repos.append(repo['name'])
+            while repos_links.get('next'):
+                print('Retrieving all repositories...')
+                url = repos_links['next']['url']
+                repos_response = send_request_pagination(url, auth_pair)
+                for repo in repos_response[0].json():
+                    repos.append(repo['name'])
+                repos_links = repos_response[1].links
+            # Iterate over collected repos list:
+            #print(len(repos))  # commenting out the next 12 lines, correctly retrieves all org. repos
             for repo in repos:
-                traffic_response = send_request('traffic', organization, auth_pair, repo, traffic_headers).json()
+                traffic_response = send_request('traffic', organization, auth_pair, repo).json()
                 print(json_to_table(repo, traffic_response, 'traffic'))
-                clones_response = send_request('clones', organization, auth_pair, repo, traffic_headers).json()
+                clones_response = send_request('clones', organization, auth_pair, repo).json()
                 print(json_to_table(repo, clones_response, 'clones'))
-                referrers_response = send_request('referrers', organization, auth_pair, repo, traffic_headers).json()
+                referrers_response = send_request('referrers', organization, auth_pair, repo).json()
                 print(json_to_table_referrers(repo, referrers_response))
                 # Saving data
                 if args.save_csv == 'save_csv':
@@ -273,15 +302,15 @@ def main():
                     store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
     else:
         # Or just request 1 repo
-        traffic_response = send_request('traffic', organization, auth_pair, repo, traffic_headers).json()
+        traffic_response = send_request('traffic', organization, auth_pair, repo).json()
         # Error handling in case of {'documentation_url': 'https://developer.github.com/v3', 'message': 'Not Found'}
         if traffic_response.get('message'):
             print(traffic_response['message'])
             return 'Code done.'
         print(json_to_table(repo, traffic_response, 'traffic'))
-        clones_response = send_request('clones', organization, auth_pair, repo, traffic_headers).json()
+        clones_response = send_request('clones', organization, auth_pair, repo).json()
         print(json_to_table(repo, clones_response, 'clones'))
-        referrers_response = send_request('referrers', organization, auth_pair, repo, traffic_headers).json()
+        referrers_response = send_request('referrers', organization, auth_pair, repo).json()
         print(json_to_table_referrers(repo, referrers_response))
         # Saving data
         if args.save_csv == 'save_csv':
