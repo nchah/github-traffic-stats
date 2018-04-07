@@ -25,7 +25,7 @@ def send_request(resource, organization, auth, repo=None):
     :param repo: string - if specified, the specific repository name
     :param headers: dict - if specified, the request headers
     :param params: dict - if specified, the parameters
-    :return: response - GET request response
+    :return: response - GET request response, if a tuple then (response, header) responses
     """
     if resource == 'traffic':
         # GET /repos/:owner/:repo/traffic/views <- from developer.github.com/v3/repos/traffic/#views
@@ -60,10 +60,10 @@ def send_request_pagination(url, auth):
     :param url: string - the URL from the "response.links" header
     :param auth: username:password separated string - if no password specified, interactive dialog used
     :param params: dict - if specified, the parameters
-    :return: response - GET request response
+    :return: response - a tuple of (response, header) responses
     """
     params = {'per_page': '100'}
-    response = requests.get(url, auth=auth)
+    response = requests.get(url, auth=auth, params=params)
     headers = requests.head(url)
     return (response, headers)
 
