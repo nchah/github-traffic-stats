@@ -31,7 +31,8 @@ class GithubTrafficStatsTest(unittest.TestCase):
         self.assertTrue(len(json_response) > 0)
         self.assertIn('count', json_response)
         self.assertIn('uniques', json_response)
-        store_csv(file_path='test.csv', json_response=json_response, repo='github-traffic-stats', response_type='views')
+        store_csv(file_path='test.csv', json_response=json_response, repo='github-traffic-stats', 
+                  response_type='views')
         cur_dir = os.getcwd()
         file_list = os.listdir(cur_dir)
         has_generated_csv = False
