@@ -13,18 +13,17 @@ class GithubTrafficStatsTest(unittest.TestCase):
         self.username = os.environ.get('github_username')
         self.password = os.environ.get('github_pass')
         self.auth_pair = (self.username, self.password)
-        self.traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
+        # self.traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
     def test_send_request(self):
-        response = send_request(auth=self.auth_pair, organization=self.username, resource='repos',
-                                headers=self.traffic_headers)
+        response = send_request(auth=self.auth_pair, organization=self.username, resource='repos')
         logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
 
     def test_store_csv(self):
         response = send_request(auth=self.auth_pair, organization=self.username, resource='traffic',
-                                headers=self.traffic_headers, repo='github-traffic-stats')
+                                repo='github-traffic-stats')
         logger.info(response.content)
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 200)
