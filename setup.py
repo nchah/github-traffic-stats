@@ -51,7 +51,7 @@ setup(
     entry_points={
         "console_scripts": ['gts = gts.main:main']
     },
-    version='1.0.2',
+    version='1.2.0',
     keywords=['github', 'traffic', 'api'],
     description="Get statistics on web traffic to your GitHub repositories.",
     author="Niel Chah, Anthony Bloomer",
