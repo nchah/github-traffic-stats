@@ -247,25 +247,53 @@ def store_db(db_config={}, repo='', json_response='', response_type=''):
 
    insert_repo_overview = "INSERT INTO repo_overview(Repo_Name, Result_Type, Uniques, Total) VALUES ('%s', '%s', %s, %s);"
    if response_type == 'views': # send data to `repo_overview` and `repo_visitors`
-      cur.execute(insert_repo_overview % (repo, response_type, json_response['uniques'], json_response['count']))
-      __insert_data_views(cur, repo, json_response)
-      exit(1) 
+      __repo_overview_insert(cur, repo, response_type, json_response)
+      __repo_views_insert(cur, repo, json_response[response_type])
 
    elif response_type == 'clones': # send data to `repo_overview` and `repo_clones`
-      insert_repo_visitors = "INSERT INTO repo_clones(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
-      cur.execute(insert_repo_overview % (repo, response_type, json_response['uniques'], json_response['count'])) 
-      cur.execute(insert_repo_visitors % __insert_data_none_reference(repo, json_response[response_type]))
+      __repo_overview_insert(cur, repo, response_type, json_response)
+      __repo_clones_insert(cur, repo, json_response[response_type])
+
    else: # send data to `repo_referrals` 
       __insert_repo_referrals(cur, repo, json_response) 
 
-def __insert_data_views(cur=None, repo='', json_response=None): 
+def __repo_overview_insert(cur=None, repo='', response_type='', json_response=None): 
+   check_count = "SELECT COUNT(*) FROM repo_overview WHERE create_timestamp=DATE(NOW()) AND Repo_Name='%s' AND Result_Type='%s'" 
+   insert_stmt = "INSERT INTO repo_overview(create_timestamp, Repo_Name, Result_Type, Uniques, Total) VALUES (DATE(NOW()), '%s', '%s', %s, %s);" 
+   
+   cur.execute(check_count % (repo, response_type)) 
+   if cur.fetchall()[0][0] == 0:
+      cur.execute(insert_stmt % (repo, response_type, json_response['uniques'], json_response['count'])) 
+      
+def __repo_views_insert(cur=None, repo='', json_response=None): 
+   """INSERT data into repo_visitors table if row doesn't already exist 
+   :param cur: psql - Connection to the PSQL in order to execute queries 
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   """
    check_count = "SELECT COUNT(*) FROM repo_visitors WHERE create_timestamp='%s' AND Repo_Name='%s';"
    insert_stmt = "INSERT INTO repo_visitors(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
 
    for obj in json_response: 
-      print(check_count % (obj['timestamp'], repo))
-      insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
-      print(insert_stmt % insert_row)
+      cur.execute(check_count % (obj['timestamp'], repo))
+      if cur.fetchall()[0][0] == 0: 
+         insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+         cur.execute(insert_stmt % insert_row)
+
+def __repo_clones_insert(cur=None, repo='', json_response=None):
+   """INSERT data into repo_clones table if row doesn't already exist 
+   :param cur: psql - Connection to the PSQL in order to execute queries 
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   """
+   check_count = "SELECT COUNT(*) FROM repo_clones WHERE create_timestamp='%s' AND Repo_Name='%s';"
+   insert_stmt = "INSERT INTO repo_clones(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
+
+   for obj in json_response: 
+      cur.execute(check_count % (obj['timestamp'], repo))
+      if cur.fetchall()[0][0] == 0: 
+         insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+         cur.execute(insert_stmt % insert_row)
 
 def __insert_data_none_reference(repo, json_response=None)->str: 
    """ Based on repo and info in json_response, generate the rows to be inserted into table:
