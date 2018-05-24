@@ -247,15 +247,25 @@ def store_db(db_config={}, repo='', json_response='', response_type=''):
 
    insert_repo_overview = "INSERT INTO repo_overview(Repo_Name, Result_Type, Uniques, Total) VALUES ('%s', '%s', %s, %s);"
    if response_type == 'views': # send data to `repo_overview` and `repo_visitors`
-      insert_repo_visitors = "INSERT INTO repo_visitors(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
       cur.execute(insert_repo_overview % (repo, response_type, json_response['uniques'], json_response['count']))
-      cur.execute(insert_repo_visitors % __insert_data_none_reference(repo, json_response[response_type])) 
+      __insert_data_views(cur, repo, json_response)
+      exit(1) 
+
    elif response_type == 'clones': # send data to `repo_overview` and `repo_clones`
       insert_repo_visitors = "INSERT INTO repo_clones(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
       cur.execute(insert_repo_overview % (repo, response_type, json_response['uniques'], json_response['count'])) 
       cur.execute(insert_repo_visitors % __insert_data_none_reference(repo, json_response[response_type]))
    else: # send data to `repo_referrals` 
       __insert_repo_referrals(cur, repo, json_response) 
+
+def __insert_data_views(cur=None, repo='', json_response=None): 
+   check_count = "SELECT COUNT(*) FROM repo_visitors WHERE create_timestamp='%s' AND Repo_Name='%s';"
+   insert_stmt = "INSERT INTO repo_visitors(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
+
+   for obj in json_response: 
+      print(check_count % (obj['timestamp'], repo))
+      insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+      print(insert_stmt % insert_row)
 
 def __insert_data_none_reference(repo, json_response=None)->str: 
    """ Based on repo and info in json_response, generate the rows to be inserted into table:
@@ -302,10 +312,12 @@ def main():
     parser.add_argument('username', help='Github username')
     parser.add_argument('repo', help='User\'s repo', default='ALL', nargs='?')
     parser.add_argument('save_csv', default='save_csv', help='Set to "no_csv" if no CSV should be saved, or "set_db" if data should be saved in database', nargs='?')
-    parser.add_argument('-hp', '--host',  default='127.0.0.1:5432', help='Set database host and port [127.0.0.1:5432]', nargs='?')
-    parser.add_argument('-usr', '--db-user', default='root:""', help='Set database user and password [root:""]', nargs='?') 
-    parser.add_argument('-name', '--db-name',  default='test', help='Set database where data will be stored', nargs='?')  
     parser.add_argument('-o', '--organization', default=None, help='Github organization')
+    parser.add_argument('-print', '--print-screen', default='True', help='Print CSV results to screen', nargs='?') # print output to screen
+    # Database config input 
+    parser.add_argument('-hp', '--host',  default='127.0.0.1:5432', help='Set database host and port [127.0.0.1:5432]', nargs='?')
+    parser.add_argument('-usr', '--db-user', default='root:""', help='Set database user and password [root:""]', nargs='?')
+    parser.add_argument('-name', '--db-name',  default='test', help='Set database where data will be stored', nargs='?')
     args = parser.parse_args()
     """ Run main code logic
     :param username: string - GitHub username, or username:password pair
@@ -370,17 +382,18 @@ def main():
             #print(len(repos))  # commenting out the next 12 lines, correctly retrieves all org. repos
             for repo in repos:
                 traffic_response = send_request('traffic', organization, auth_pair, repo).json()
-                print(json_to_table(repo, traffic_response, 'traffic'))
                 clones_response = send_request('clones', organization, auth_pair, repo).json()
-                print(json_to_table(repo, clones_response, 'clones'))
                 referrers_response = send_request('referrers', organization, auth_pair, repo).json()
-                print(json_to_table_referrers(repo, referrers_response))
+                if args.print_screen == 'True': 
+                   print(json_to_table(repo, traffic_response, 'traffic'))
+                   print(json_to_table(repo, clones_response, 'clones'))
+                   print(json_to_table_referrers(repo, referrers_response))
                 # Saving data
                 if args.save_csv == 'save_csv':
                     store_csv(csv_file_name, repo, traffic_response, 'views')
                     store_csv(csv_file_name_clones, repo, clones_response, 'clones')
                     store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
-                if args.save_csv.strip() == 'set_db':
+                elif args.save_csv.strip() == 'set_db':
                     store_db(db_config, repo, traffic_response, 'views')
                     store_db(db_config, repo, clones_response, 'clones')
                     store_dbs(db_configs, repo, referrers_response)
@@ -393,17 +406,18 @@ def main():
         if traffic_response.get('message'):
             print(traffic_response['message'])
             return 'Code done.'
-        print(json_to_table(repo, traffic_response, 'traffic'))
         clones_response = send_request('clones', organization, auth_pair, repo).json()
-        print(json_to_table(repo, clones_response, 'clones'))
         referrers_response = send_request('referrers', organization, auth_pair, repo).json()
-        print(json_to_table_referrers(repo, referrers_response))
+        if args.print_screen == 'True': 
+           print(json_to_table(repo, traffic_response, 'traffic'))
+           print(json_to_table(repo, clones_response, 'clones'))
+           print(json_to_table_referrers(repo, referrers_response)) 
         # Saving data
         if args.save_csv == 'save_csv':
             store_csv(csv_file_name, repo, traffic_response, 'views')
             store_csv(csv_file_name_clones, repo, clones_response, 'clones')
             store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
-        if args.save_csv.strip() == 'set_db':
+        elif args.save_csv.strip() == 'set_db':
             store_db(db_config, repo, traffic_response, 'views')
             store_db(db_config, repo, clones_response, 'clones')
             store_db(db_config, repo, referrers_response)
