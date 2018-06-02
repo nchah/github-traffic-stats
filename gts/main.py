@@ -7,7 +7,7 @@ from collections import OrderedDict
 import datetime
 import getpass
 import requests
-
+import psycopg2
 
 # Globals
 current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
@@ -230,18 +230,131 @@ def store_csv(file_path, repo, json_response, response_type):
                 csv_writer.writerow(row)
 
 
+def store_db(db_config={}, repo='', json_response='', response_type=''):
+   """ Store data for a given response into a corresponding table (described in create_table.sql):
+   repo_name, date, views, unique_visitors/cloners
+   :param db_config: dict - dictionary containing configuration information for database 
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   :param response_type: str - 'views', 'clones', ''
+   """
+
+   # Connect to database 
+   conn = psycopg2.connect(host=db_config['host'], port=db_config['port'], user=db_config['user'], password=db_config['password'], dbname=db_config['dbname']) 
+   conn.autocommit = True
+   cur = conn.cursor() 
+
+
+   insert_repo_overview = "INSERT INTO repo_overview(Repo_Name, Result_Type, Uniques, Total) VALUES ('%s', '%s', %s, %s);"
+   if response_type == 'views': # send data to `repo_overview` and `repo_visitors`
+      __repo_overview_insert(cur, repo, response_type, json_response)
+      __repo_views_insert(cur, repo, json_response[response_type])
+
+   elif response_type == 'clones': # send data to `repo_overview` and `repo_clones`
+      __repo_overview_insert(cur, repo, response_type, json_response)
+      __repo_clones_insert(cur, repo, json_response[response_type])
+
+   else: # send data to `repo_referrals` 
+      __insert_repo_referrals(cur, repo, json_response) 
+
+def __repo_overview_insert(cur=None, repo='', response_type='', json_response=None): 
+   check_count = "SELECT COUNT(*) FROM repo_overview WHERE create_timestamp=DATE(NOW()) AND Repo_Name='%s' AND Result_Type='%s'" 
+   insert_stmt = "INSERT INTO repo_overview(create_timestamp, Repo_Name, Result_Type, Uniques, Total) VALUES (DATE(NOW()), '%s', '%s', %s, %s);" 
+   
+   cur.execute(check_count % (repo, response_type)) 
+   if cur.fetchall()[0][0] == 0:
+      cur.execute(insert_stmt % (repo, response_type, json_response['uniques'], json_response['count'])) 
+      
+def __repo_views_insert(cur=None, repo='', json_response=None): 
+   """INSERT data into repo_visitors table if row doesn't already exist 
+   :param cur: psql - Connection to the PSQL in order to execute queries 
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   """
+   check_count = "SELECT COUNT(*) FROM repo_visitors WHERE create_timestamp='%s' AND Repo_Name='%s';"
+   insert_stmt = "INSERT INTO repo_visitors(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
+
+   for obj in json_response: 
+      cur.execute(check_count % (obj['timestamp'], repo))
+      if cur.fetchall()[0][0] == 0: 
+         insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+         cur.execute(insert_stmt % insert_row)
+
+def __repo_clones_insert(cur=None, repo='', json_response=None):
+   """INSERT data into repo_clones table if row doesn't already exist 
+   :param cur: psql - Connection to the PSQL in order to execute queries 
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   """
+   check_count = "SELECT COUNT(*) FROM repo_clones WHERE create_timestamp='%s' AND Repo_Name='%s';"
+   insert_stmt = "INSERT INTO repo_clones(Repo_Name, create_timestamp, Uniques, Total) VALUES %s;"
+
+   for obj in json_response: 
+      cur.execute(check_count % (obj['timestamp'], repo))
+      if cur.fetchall()[0][0] == 0: 
+         insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+         cur.execute(insert_stmt % insert_row)
+
+def __insert_data_none_reference(repo, json_response=None)->str: 
+   """ Based on repo and info in json_response, generate the rows to be inserted into table:
+   repo_name, date, views, unique_visitors/cloners
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   :return return_stmt: str - string containing the rows which will be inserted
+   """
+
+   return_stmt = ""
+   i = 0 
+   for obj in json_response:
+      if i == len(json_response)-1: 
+         return_stmt += "\n\t('%s', '%s', %s, %s);" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+      else: 
+         return_stmt += "\n\t('%s', '%s', %s, %s)," % (repo, obj['timestamp'], obj['uniques'], obj['count'])
+      i += 1
+   return return_stmt
+
+def __insert_repo_referrals(cur=None, repo='', json_response=None): 
+   """ Based on repo and info in json_response, generate the rows to be inserted into `repo_referrals`:
+   repo_name, views, unique_visitors/cloners
+   :param cur: psql - Connection to the PSQL in order to execute queries 
+   :param repo: str - the GitHub repository name
+   :param json_response: json - the json input
+   """
+
+   insert_stmt = "INSERT INTO repo_referrals(Repo_Name, Referral, Uniques, Total) VALUES('%s', '%s', %s, %s)" 
+   update_stmt = "UPDATE repo_referrals SET Uniques=%s, Total=%s WHERE Repo_Name='%s' AND Referral='%s'"
+   check_stmt = "SELECT COUNT(*) FROM repo_referrals WHERE Repo_Name='%s' AND Referral='%s'"
+   for obj in json_response: 
+      # Check whether or not a given referral exists 
+      check_count = check_stmt % (repo, obj['referrer']) 
+      cur.execute(check_count)
+      count = cur.fetchall()[0][0]
+      if count == 0: # If referral doesn't exists create a new one 
+         insert = insert_stmt % (repo, obj['referrer'], obj['uniques'], obj['count'])
+      else: # If referral exists update row 
+         insert = update_stmt % (obj['uniques'], obj['count'], repo, obj['referrer']) 
+      cur.execute(insert) 
+ 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('username', help='Github username')
     parser.add_argument('repo', help='User\'s repo', default='ALL', nargs='?')
-    parser.add_argument('save_csv', default='save_csv', help='Set to "no_csv" if no CSV should be saved', nargs='?')
+    parser.add_argument('save_csv', default='save_csv', help='Set to "no_csv" if no CSV should be saved, or "set_db" if data should be saved in database', nargs='?')
     parser.add_argument('-o', '--organization', default=None, help='Github organization')
+    parser.add_argument('-print', '--print-screen', default='True', help='Print CSV results to screen', nargs='?') # print output to screen
+    # Database config input 
+    parser.add_argument('-hp', '--host',  default='127.0.0.1:5432', help='Set database host and port [127.0.0.1:5432]', nargs='?')
+    parser.add_argument('-usr', '--db-user', default='root:""', help='Set database user and password [root:""]', nargs='?')
+    parser.add_argument('-name', '--db-name',  default='test', help='Set database where data will be stored', nargs='?')
     args = parser.parse_args()
     """ Run main code logic
     :param username: string - GitHub username, or username:password pair
     :param repo: string - GitHub user's repo name or by default 'ALL' repos
     :param save_csv: string - Specify if CSV log should be saved
     :optional:
+    param -hp, --host: string - Host and port to the database
+    param -usr, --db-user: string - user and password to the database 
+    param -name, --db-name: string - database name 
     param -o, --organization: string - GitHub organization (if different from username)
     """
 
@@ -263,6 +376,13 @@ def main():
     auth_pair = (username, pw)
     # traffic_headers = {'Accept': 'application/vnd.github.spiderman-preview'}
 
+    # database config info 
+    db_config = {'host': args.host.strip().split(":")[0],
+                 'port': int(args.host.strip().split(":")[1]),
+                 'user': args.db_user.strip().split(":")[0],
+                 'password': args.db_user.strip().split(":")[1],
+                 'dbname': args.db_name.strip()
+                }
     if repo == 'ALL':
         # By default iterate over all repositories
         repos = []
@@ -290,33 +410,46 @@ def main():
             #print(len(repos))  # commenting out the next 12 lines, correctly retrieves all org. repos
             for repo in repos:
                 traffic_response = send_request('traffic', organization, auth_pair, repo).json()
-                print(json_to_table(repo, traffic_response, 'traffic'))
                 clones_response = send_request('clones', organization, auth_pair, repo).json()
-                print(json_to_table(repo, clones_response, 'clones'))
                 referrers_response = send_request('referrers', organization, auth_pair, repo).json()
-                print(json_to_table_referrers(repo, referrers_response))
+                if args.print_screen == 'True': 
+                   print(json_to_table(repo, traffic_response, 'traffic'))
+                   print(json_to_table(repo, clones_response, 'clones'))
+                   print(json_to_table_referrers(repo, referrers_response))
                 # Saving data
                 if args.save_csv == 'save_csv':
                     store_csv(csv_file_name, repo, traffic_response, 'views')
                     store_csv(csv_file_name_clones, repo, clones_response, 'clones')
                     store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
-    else:
+                elif args.save_csv.strip() == 'set_db':
+                    store_db(db_config, repo, traffic_response, 'views')
+                    store_db(db_config, repo, clones_response, 'clones')
+                    store_dbs(db_configs, repo, referrers_response)
+
+                
+    else: 
         # Or just request 1 repo
         traffic_response = send_request('traffic', organization, auth_pair, repo).json()
         # Error handling in case of {'documentation_url': 'https://developer.github.com/v3', 'message': 'Not Found'}
         if traffic_response.get('message'):
             print(traffic_response['message'])
             return 'Code done.'
-        print(json_to_table(repo, traffic_response, 'traffic'))
         clones_response = send_request('clones', organization, auth_pair, repo).json()
-        print(json_to_table(repo, clones_response, 'clones'))
         referrers_response = send_request('referrers', organization, auth_pair, repo).json()
-        print(json_to_table_referrers(repo, referrers_response))
+        if args.print_screen == 'True': 
+           print(json_to_table(repo, traffic_response, 'traffic'))
+           print(json_to_table(repo, clones_response, 'clones'))
+           print(json_to_table_referrers(repo, referrers_response)) 
         # Saving data
         if args.save_csv == 'save_csv':
             store_csv(csv_file_name, repo, traffic_response, 'views')
             store_csv(csv_file_name_clones, repo, clones_response, 'clones')
             store_csv_referrers(csv_file_name_referrers, repo, referrers_response)
+        elif args.save_csv.strip() == 'set_db':
+            store_db(db_config, repo, traffic_response, 'views')
+            store_db(db_config, repo, clones_response, 'clones')
+            store_db(db_config, repo, referrers_response)
+
 
 
 if __name__ == '__main__':
