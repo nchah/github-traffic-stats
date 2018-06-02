@@ -30,6 +30,7 @@ Dependencies
 ------------
 
 -  Requests (`kennethreitz/requests`_)
+-  psycopg2 (`psycopg/psycopg2`_)
 
 Install the requirements by running: 
 
@@ -54,11 +55,15 @@ Usage
       username    Github username
       password    Github password for 'username', or access token
       repo        User's repo
-      save_csv    Set to "no_csv" if no CSV should be saved
+      save_csv    Set to "no_csv" if no CSV should be saved OR "set_db" to send to postgres
 
     optional arguments:
       -h, --help  show this help message and exit
       -o, --organization specify Github organization if different from username
+      -print, --print-screen print CSV results to screen (default='True')
+      -hp, --host set database host and port [127.0.0.1:5432] (default='127.0.0.1:5432')
+      -usr, --db-user set database user and password [root:""] (default='root:""')
+      -name, --db-name  set database where data will be stored' (default='test')
        
 Information on `Github Access Tokens`_.
 
