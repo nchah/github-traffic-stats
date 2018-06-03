@@ -6,8 +6,9 @@ import os
 from collections import OrderedDict
 import datetime
 import getpass
-import requests
 import psycopg2
+import requests
+
 
 # Globals
 current_timestamp = str(datetime.datetime.now().strftime('%Y-%m-%d-%Hh-%Mm'))  # was .strftime('%Y-%m-%d'))
@@ -238,7 +239,6 @@ def store_db(db_config={}, repo='', json_response='', response_type=''):
    :param json_response: json - the json input
    :param response_type: str - 'views', 'clones', ''
    """
-
    # Connect to database 
    conn = psycopg2.connect(host=db_config['host'], port=db_config['port'], user=db_config['user'], password=db_config['password'], dbname=db_config['dbname']) 
    conn.autocommit = True
@@ -257,6 +257,7 @@ def store_db(db_config={}, repo='', json_response='', response_type=''):
    else: # send data to `repo_referrals` 
       __insert_repo_referrals(cur, repo, json_response) 
 
+
 def __repo_overview_insert(cur=None, repo='', response_type='', json_response=None): 
    check_count = "SELECT COUNT(*) FROM repo_overview WHERE create_timestamp=DATE(NOW()) AND Repo_Name='%s' AND Result_Type='%s'" 
    insert_stmt = "INSERT INTO repo_overview(create_timestamp, Repo_Name, Result_Type, Uniques, Total) VALUES (DATE(NOW()), '%s', '%s', %s, %s);" 
@@ -264,7 +265,8 @@ def __repo_overview_insert(cur=None, repo='', response_type='', json_response=No
    cur.execute(check_count % (repo, response_type)) 
    if cur.fetchall()[0][0] == 0:
       cur.execute(insert_stmt % (repo, response_type, json_response['uniques'], json_response['count'])) 
-      
+
+
 def __repo_views_insert(cur=None, repo='', json_response=None): 
    """INSERT data into repo_visitors table if row doesn't already exist 
    :param cur: psql - Connection to the PSQL in order to execute queries 
@@ -279,6 +281,7 @@ def __repo_views_insert(cur=None, repo='', json_response=None):
       if cur.fetchall()[0][0] == 0: 
          insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
          cur.execute(insert_stmt % insert_row)
+
 
 def __repo_clones_insert(cur=None, repo='', json_response=None):
    """INSERT data into repo_clones table if row doesn't already exist 
@@ -295,14 +298,14 @@ def __repo_clones_insert(cur=None, repo='', json_response=None):
          insert_row = "\n\t('%s', '%s', %s, %s)" % (repo, obj['timestamp'], obj['uniques'], obj['count'])
          cur.execute(insert_stmt % insert_row)
 
-def __insert_data_none_reference(repo, json_response=None)->str: 
+
+def __insert_data_none_reference(repo, json_response=None): #->str:  # func annotations from py3 on, else drop py2 support
    """ Based on repo and info in json_response, generate the rows to be inserted into table:
    repo_name, date, views, unique_visitors/cloners
    :param repo: str - the GitHub repository name
    :param json_response: json - the json input
    :return return_stmt: str - string containing the rows which will be inserted
    """
-
    return_stmt = ""
    i = 0 
    for obj in json_response:
@@ -313,6 +316,7 @@ def __insert_data_none_reference(repo, json_response=None)->str:
       i += 1
    return return_stmt
 
+
 def __insert_repo_referrals(cur=None, repo='', json_response=None): 
    """ Based on repo and info in json_response, generate the rows to be inserted into `repo_referrals`:
    repo_name, views, unique_visitors/cloners
@@ -320,7 +324,6 @@ def __insert_repo_referrals(cur=None, repo='', json_response=None):
    :param repo: str - the GitHub repository name
    :param json_response: json - the json input
    """
-
    insert_stmt = "INSERT INTO repo_referrals(Repo_Name, Referral, Uniques, Total) VALUES('%s', '%s', %s, %s)" 
    update_stmt = "UPDATE repo_referrals SET Uniques=%s, Total=%s WHERE Repo_Name='%s' AND Referral='%s'"
    check_stmt = "SELECT COUNT(*) FROM repo_referrals WHERE Repo_Name='%s' AND Referral='%s'"
@@ -334,6 +337,7 @@ def __insert_repo_referrals(cur=None, repo='', json_response=None):
       else: # If referral exists update row 
          insert = update_stmt % (obj['uniques'], obj['count'], repo, obj['referrer']) 
       cur.execute(insert) 
+
  
 def main():
     parser = argparse.ArgumentParser()
@@ -357,7 +361,6 @@ def main():
     param -name, --db-name: string - database name 
     param -o, --organization: string - GitHub organization (if different from username)
     """
-
     str = args.username.strip()
     sub = str.split(':', 1 )
     len_sub = len(sub)
@@ -426,7 +429,7 @@ def main():
                     store_db(db_config, repo, clones_response, 'clones')
                     store_dbs(db_configs, repo, referrers_response)
 
-                
+
     else: 
         # Or just request 1 repo
         traffic_response = send_request('traffic', organization, auth_pair, repo).json()
