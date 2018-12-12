@@ -427,7 +427,7 @@ def main():
                 elif args.save_csv.strip() == 'set_db':
                     store_db(db_config, repo, traffic_response, 'views')
                     store_db(db_config, repo, clones_response, 'clones')
-                    store_dbs(db_configs, repo, referrers_response)
+                    store_db(db_config, repo, referrers_response)
 
 
     else: 
