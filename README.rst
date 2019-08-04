@@ -29,8 +29,8 @@ Installation
 Dependencies
 ------------
 
--  Requests (`kennethreitz/requests`_)
--  psycopg2 (`psycopg/psycopg2`_)
+-  Requests (https://github.com/psf/requests)
+-  psycopg2 (https://github.com/psycopg/psycopg2)
 
 Install the requirements by running: 
 
