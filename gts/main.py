@@ -6,7 +6,6 @@ import os
 from collections import OrderedDict
 import datetime
 import getpass
-import psycopg2
 import requests
 
 
@@ -239,6 +238,15 @@ def store_db(db_config={}, repo='', json_response='', response_type=''):
    :param json_response: json - the json input
    :param response_type: str - 'views', 'clones', ''
    """
+   
+   try:
+      import psycopg2
+   except:
+      import sys
+      sys.stderr.write('The psycopg2 library is required to use database features.\n')
+      sys.stderr.flush()
+      sys.exit(1)
+
    # Connect to database 
    conn = psycopg2.connect(host=db_config['host'], port=db_config['port'], user=db_config['user'], password=db_config['password'], dbname=db_config['dbname']) 
    conn.autocommit = True
