@@ -59,6 +59,9 @@ setup(
     install_requires=[
         'requests'
     ],
+    extras_require = {
+        'sql':  ["psycopg2"]
+    }
     classifiers=[
         'Intended Audience :: Developers',
     ],
